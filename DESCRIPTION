@@ -1,10 +1,12 @@
 Package: phenoriceR
 Type: Package
 Title: Routines for analysis of PhenoRice outputs
+Version: 0.1.0.9000
 Authors@R: person("Lorenzo", "Busetto", email = "busetto.l@irea.cnr.it", role = c("aut", "cre"))
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: Routines for analysis of PhenoRice outputs
+Depends: R (>= 3.4.0)
+Imports: doSNOW,gdalUtils,parallel,tools,dplyr,stringr,tibble,raster
+Remotes: lbusett/sprawl
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -13,6 +15,6 @@ BugReports: https://github.com/lbusett/phenoriceR/issues
 Suggests: testthat,
     knitr,
     rmarkdown
-VignetteBuilder: VignetteBuilder: knitr
-Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr

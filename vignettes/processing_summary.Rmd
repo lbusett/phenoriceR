@@ -12,8 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 library(sprawl)
 library(ggplot2)
 library(ggjoy)
-library(tidyverse)
+library(tibble)
 library(raster)
+library(phenoriceR)
+library(dplyr)
 ```
 
 Here I am going to document the passages required to extract data from PhenoRice mosaics
@@ -168,8 +170,7 @@ force, but for larger areas it will be impossible):
 # get the data for three years as an array that contains all detected sos dates in Nueva 
 # Ecijia as a single array
 
-library(dplyr)
-library(ggplot2)
+
 sos = (as.Date("2000-01-01") + raster::getValues(insos_decirc[[1:24]]))
 sos = sos[!is.na(sos)]
 alldata = data.frame(sos = sos) %>% 
