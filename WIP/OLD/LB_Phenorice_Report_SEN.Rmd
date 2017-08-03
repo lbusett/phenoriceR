@@ -1,0 +1,258 @@
+---
+output: word_document
+---
+
+
+```{r load_data, echo=FALSE, message = FALSE, error = FALSE, hide = TRUE, results = 'hide', warning = FALSE}
+ 
+#---- Load libraries and load data from results of LB_Phenorice_plot_dates.R ----
+
+  library(ggplot2)
+  library(reshape)
+  library(data.table)
+  library(rgdal)
+  library(SDMTools)
+  library(plyr)
+  library(gdalUtils)
+  library(raster)
+  library(foreign)
+  library(tools)
+  library(hydroGOF)
+  library(gridExtra)
+  library(scales)
+  library(latticeExtra)
+
+   # year = 2005
+  
+  main_folder = 'D:/Temp/PhenoRice/Processing/SEN/Outputs/new_Elab2'															# Folder used to store results of " 
+  results_folder = file.path(main_folder,'RData')			# Where to put results
+  country_code = 'sen'
+  sel_quart = c()
+  out_RData_file = file.path(results_folder, paste0('phenorice_stats',year,'.RData'))
+  load(out_RData_file)
+   phenorice_map = file.path('//10.0.1.252/nr_working/shared/PhenoRice/Processing/Senegal/Outputs/New_Elab2',year,'raster',paste0('old_min_identification_Full_Out_',year,'.dat'))
+  
+
+```
+# Introduction 
+
+This report summarize results of PhenoRice analysis on the Senegal Study area. The analysis is relative to the `r year`  growing season.
+Phenorice was run in this case with a modified configuration regarding the length of the different quarters to limit overlapping between first quarter of present year and last quarter of last year. Season One includes minima from september previous year to december. Season two goes january to march, season 3 april to June, Season four July to  October
+Parameterization: All criteria are ON. Thresholds for maxima were considerably adjusted. (Min value for legit Maximum is set at 3000, which is quite low.)
+
+Masking: Analysis concentrated on the Senegal River "valley". Additional masking based on 2005 FAO Land Cover map. This allowed to limit some misclassification on deserts/flooded areas, and in particular to avoid big errors in humid areas. 
+
+Statistical results are based only on SENEGAL areas. Maps shows also Mauritania, Mali, etc, but WITHOUT MASKING !
+
+# Identified Area (By Province)
+
+The graphs below show distribution of rice detected area in the different analyzed arrondisements, divided by number of seasons. 
+
+```{r areas, echo=FALSE, fig.height = 8, fig.width = 11, fig.cap = 'Distribution of detected rice area', hide = TRUE, message = FALSE, error = FALSE, results = 'hide'}
+  
+  data = droplevels(subset(aggr_dt_N_Seasons, Adm_Name != 'NA'))
+  
+  datamelt = melt (data, measure.vars = c('n_1season','n_2seasons','n_3seasons','n_4seasons'))
+  datamelt$value = datamelt$value*231.656358*231.656358/10000
+  p_area2 = ggplot(data = datamelt, aes (x = Adm_Name, y = value, fill = variable ))
+  p_area2 = p_area2 + theme_bw() + ylab('Detected Rice Area [ha]')
+  p_area2 = p_area2 + geom_bar(stat = 'identity')+ theme(axis.text.x = element_text(angle = 90 , vjust = 0, hjust = 1))
+  p_area
+  p_area2
+```
+
+
+# Variability of Flooding Dates (Days of Sowing)
+
+The graphs below show the statistical distribution of retrieved Flooding dates in the area, using different ways of representing the results. 
+
+
+```{r mins, echo=FALSE, fig.height = 16, fig.width = 11, fig.cap = 'Statistical distribution of retrieved flooding dates', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  grid.arrange(p1_mins,p2_mins,p3_mins)
+
+```
+
+## Analysis by province
+
+Below, the analysis is repeated, showing results separated by province (Adiministrative areas of level 3 accoding to GADM.
+
+
+```{r mins_pro, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Statistical distribution of retrieved flooding dates - By Province', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  grid.arrange(p1_mins_pro,p2_mins_pro,p3_mins_pro)
+
+```
+
+
+# Variability of Heading Dates (Days of Maximum)
+
+The graphs in Figure 3 show the statistical distribution of retrieved Heading dates in the area. 
+
+
+```{r maxs, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Statistical distribution of retrieved Heading dates', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  grid.arrange(p1_maxs,p2_maxs,p3_maxs)
+
+```
+
+## Analysis by province
+
+The graphs in Figure 4 show the statistical distribution of retrieved Heading dates in the area. 
+
+```{r maxs_pro, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Statistical distribution of retrieved Heading dates - By Province', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  grid.arrange(p1_maxs_pro,p2_maxs_pro,p3_maxs_pro)
+
+```
+
+
+# Variability of length of vegetative season (Max Date - Flooding Date)
+
+The graphs below show the statistical distribution of retrieved length of season. 
+
+
+```{r lgt, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Statistical distribution of retrieved Length of Season', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  grid.arrange(p1_lgt,p2_lgt,p3_lgt)
+
+```
+
+## Analysis by province
+
+
+```{r lgt_pro, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Statistical distribution of retrieved Length of Season - By Province', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  #err = tryCatch(grid.arrange(p1_lgt_pro,p2_lgt_pro,p3_lgt_pro))
+
+```
+
+# Maps
+
+Below, I report simple maps of the number of detected seasons and of the Flooding dates, at 250m resolution.
+
+
+```{r map_nseas, echo=FALSE, fig.height = 16,fig.width = 11, fig.cap = 'Map of Number of Seasons', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  gadm_shp_url <- paste0('http://biogeo.ucdavis.edu/data/gadm2/shp/',country_code,'_adm.zip')
+  gadm_shape_dir <- file.path(main_folder,'gadm',basename(file_path_sans_ext(gadm_shp_url)))
+  gadm_level = 3
+  gadm_shape_name = paste0(toupper(country_code),'_adm',gadm_level,'_sinu.shp')
+  in_shape_admin_reproj <- readOGR(gadm_shape_dir,file_path_sans_ext(gadm_shape_name))
+  
+  refmap = raster (phenorice_map, band = 1)
+  refmap[refmap >365] = NA
+  refmap[refmap == 0] = NA
+  # limits = quantile(refmap, c(1,4))
+  spplot(refmap, maxpixels = ncell(refmap)/2,main=list(label="Number of Rice Seasons",cex=2), col.regions=topo.colors(16), zlim = c(1,4))+layer(sp.polygons(in_shape_admin_reproj))
+
+```   
+
+```{r map_1, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Map of estimated flooding dates - First Quarter', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+#   refmap_file= 'D:/Temp/PhenoRice/Processing/PHL/Outputs/2013/Validate/Reference/Reproj/Reference_Map_SIN.tif'
+  
+#   phenorice_map = file.path('//10.0.1.252/nr_working/shared/PhenoRice/Processing/Senegal/Outputs/50_30_30_120_dec_ok/newquarts',year,'raster',
+#                             paste0('old_min_identification_Full_Out_',year,'.dat'))
+  
+    # 'D:/Temp/PhenoRice/Processing/IND/Outputs/2014/Validate/Input/Clipped/Phenorice_Clipped.tif'
+    # phenorice_map = "//10.0.1.252/nr_working/shared/PhenoRice/Processing/IT/Outputs/2013//raster/old_min_identification_Full_Out_2013.dat"
+#   gadm_shp_url <- paste0('http://biogeo.ucdavis.edu/data/gadm2/shp/',country_code,'_adm.zip')
+#   gadm_shape_dir <- file.path(main_folder,'gadm',basename(file_path_sans_ext(gadm_shp_url)))
+#   gadm_level = 3
+#   gadm_shape_name = paste0(toupper(country_code),'_adm',gadm_level,'_sinu.shp')
+#   in_shape_admin_reproj <- readOGR(gadm_shape_dir,file_path_sans_ext(gadm_shape_name))
+  
+
+  refmap = raster (phenorice_map, band = 2)
+  refmap[refmap >365] = NA
+  refmap[refmap == 0] = NA
+  limits = quantile(refmap, c(0.05, 0.95))
+  spplot(refmap, maxpixels = ncell(refmap)/2,main=list(label="Flooding Dates - First Quarter",cex=2), col.regions=topo.colors(16), zlim = limits)+layer(sp.polygons(in_shape_admin_reproj))
+
+``` 
+
+  
+```{r map_2, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Map of estimated flooding dates - Second Quarter', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+#   refmap_file= 'D:/Temp/PhenoRice/Processing/PHL/Outputs/2013/Validate/Reference/Reproj/Reference_Map_SIN.tif'
+  
+  
+  
+#   phenorice_map = file.path('//10.0.1.252/nr_working/shared/PhenoRice/Processing/Senegal/Outputs/50_30_30_120_dec_ok/newquarts',year,'raster',
+#                             paste0('old_min_identification_Full_Out_',year,'.dat'))
+  
+    # 'D:/Temp/PhenoRice/Processing/IND/Outputs/2014/Validate/Input/Clipped/Phenorice_Clipped.tif'
+    # phenorice_map = "//10.0.1.252/nr_working/shared/PhenoRice/Processing/IT/Outputs/2013//raster/old_min_identification_Full_Out_2013.dat"
+#   gadm_shp_url <- paste0('http://biogeo.ucdavis.edu/data/gadm2/shp/',country_code,'_adm.zip')
+#   gadm_shape_dir <- file.path(main_folder,'gadm',basename(file_path_sans_ext(gadm_shp_url)))
+#   gadm_level = 3
+#   gadm_shape_name = paste0(toupper(country_code),'_adm',gadm_level,'_sinu.shp')
+#   in_shape_admin_reproj <- readOGR(gadm_shape_dir,file_path_sans_ext(gadm_shape_name))
+  
+
+  refmap = raster (phenorice_map, band = 3)
+  refmap[refmap >365] = NA
+  refmap[refmap == 0] = NA
+  limits = quantile(refmap, c(0.05, 0.95))
+  spplot(refmap, maxpixels = ncell(refmap)/2,main=list(label="Flooding Dates - Second Quarter",cex=2), col.regions=topo.colors(16), zlim = limits)+layer(sp.polygons(in_shape_admin_reproj))
+
+``` 
+
+```{r map_3, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Map of estimated flooding dates - Third Quarter', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+#   refmap_file= 'D:/Temp/PhenoRice/Processing/PHL/Outputs/2013/Validate/Reference/Reproj/Reference_Map_SIN.tif'
+  
+  
+  
+#   phenorice_map = file.path('//10.0.1.252/nr_working/shared/PhenoRice/Processing/Senegal/Outputs/50_30_30_120_dec_ok/newquarts',year,'raster',
+#                             paste0('old_min_identification_Full_Out_',year,'.dat'))
+  
+    # 'D:/Temp/PhenoRice/Processing/IND/Outputs/2014/Validate/Input/Clipped/Phenorice_Clipped.tif'
+    # phenorice_map = "//10.0.1.252/nr_working/shared/PhenoRice/Processing/IT/Outputs/2013//raster/old_min_identification_Full_Out_2013.dat"
+#   gadm_shp_url <- paste0('http://biogeo.ucdavis.edu/data/gadm2/shp/',country_code,'_adm.zip')
+#   gadm_shape_dir <- file.path(main_folder,'gadm',basename(file_path_sans_ext(gadm_shp_url)))
+#   gadm_level = 3
+#   gadm_shape_name = paste0(toupper(country_code),'_adm',gadm_level,'_sinu.shp')
+#   in_shape_admin_reproj <- readOGR(gadm_shape_dir,file_path_sans_ext(gadm_shape_name))
+#   
+# 
+#   refmap = raster (phenorice_map, band = 4)
+#   refmap[refmap >365] = NA
+#   refmap[refmap == 0] = NA
+#   limits = quantile(refmap, c(0.05, 0.95))
+#   spplot(refmap, maxpixels = ncell(refmap)/2,main=list(label="Flooding Dates - Third Quarter",cex=2), col.regions=topo.colors(16), zlim = limits)+layer(sp.polygons(in_shape_admin_reproj))
+# 
+# ``` 
+# 
+# ```{r map_4, echo=FALSE, fig.height = 16, fig.width = 11,fig.cap = 'Map of estimated flooding dates - Fourth Quarter', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+#   
+# #   refmap_file= 'D:/Temp/PhenoRice/Processing/PHL/Outputs/2013/Validate/Reference/Reproj/Reference_Map_SIN.tif'
+#   
+#   
+#   
+# #   phenorice_map = file.path('//10.0.1.252/nr_working/shared/PhenoRice/Processing/Senegal/Outputs/50_30_30_120_dec_ok/newquarts',year,'raster',
+# #                             paste0('old_min_identification_Full_Out_',year,'.dat'))
+#   
+#     # 'D:/Temp/PhenoRice/Processing/IND/Outputs/2014/Validate/Input/Clipped/Phenorice_Clipped.tif'
+#     # phenorice_map = "//10.0.1.252/nr_working/shared/PhenoRice/Processing/IT/Outputs/2013//raster/old_min_identification_Full_Out_2013.dat"
+#   gadm_shp_url <- paste0('http://biogeo.ucdavis.edu/data/gadm2/shp/',country_code,'_adm.zip')
+#   gadm_shape_dir <- file.path(main_folder,'gadm',basename(file_path_sans_ext(gadm_shp_url)))
+#   gadm_level = 3
+#   gadm_shape_name = paste0(toupper(country_code),'_adm',gadm_level,'_sinu.shp')
+#   in_shape_admin_reproj <- readOGR(gadm_shape_dir,file_path_sans_ext(gadm_shape_name))
+#   
+# 
+#   refmap = raster (phenorice_map, band = 5)
+#   refmap[refmap >365] = NA
+#   refmap[refmap == 0] = NA
+#   limits = quantile(refmap, c(0.05, 0.95))
+#   spplot(refmap, maxpixels = ncell(refmap)/2,main=list(label="Flooding Dates - Fourth Quarter",cex=2), col.regions=topo.colors(16), zlim = limits)+layer(sp.polygons(in_shape_admin_reproj))
+
+``` 
+
+ 
+  
+
+
+

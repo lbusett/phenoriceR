@@ -1,0 +1,114 @@
+---
+title: 'Validation of Phenorice rice map - Italy'
+output:
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+    keep_tex: yes
+  geometry: margin = 0.5 cm
+---
+
+
+```{r load_data, echo=FALSE, message = FALSE, error = FALSE, hide = TRUE, results = 'hide', warning = FALSE}
+ 
+#---- Load libraries and load data from results of LB_Phenorice_plot_dates.R ----
+
+  library(ggplot2)
+  library(reshape)
+  library(data.table)
+  library(rgdal)
+  library(SDMTools)
+  library(plyr)
+  library(gdalUtils)
+  library(raster)
+  library(foreign)
+  library(tools)
+  library(hydroGOF)
+  library(gridExtra)
+  library(scales)
+  library(latticeExtra)
+
+
+  main_folder = 'D:/Temp/PhenoRice/Processing/PHL/Outputs/2013_new_WS/' 															# Folder used to store results of " 
+  results_folder = file.path(main_folder,'Validate')			# Where to put results
+  country_code = 'PHL'
+  sel_quart = c()
+  out_RData_file = file.path(results_folder, 'Plots_Validate_quart3.RData')
+  load(out_RData_file)
+
+```
+# Introduction 
+
+This report summarize results of PhenoRice rice area validation on the Italian Study area. The analysis is relative to the 2012-2013 growing seasons.
+Phenorice was run in this case with "standard" parameterization (4 equal sized seasons - default values for criteria), __,  considering the EVI decrease criteria__
+
+\pagebreak
+
+# Accuracies computed on areas 
+```{r accuracies, echo=FALSE, fig.height = 7, fig.cap = 'MODIS vs SIARL area + User s and producers accuracy for rice class - computed on Areas', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  grid.arrange(p_area_comp_all, p_accuracy, p_accuracy_pro)
+```
+
+\pagebreak
+
+
+# Detection Rate
+
+```{r detection, echo=FALSE, fig.height = 8, fig.cap = 'Detection rate vs rice surface in MODIS pixel', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  p_detection
+
+```
+
+\pagebreak
+
+# Scatterplots
+
+Comparison between MODIS and Reference rice areas, based on aggregation on 2x2 , 5x5 etc. grids
+
+```{r scatter, echo=FALSE, fig.height = 9, fig.cap = 'Comparison of areas', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  
+  grid.arrange(plots_accuracy_1,plots_accuracy_2,plots_accuracy_3,plots_accuracy_4)
+
+```
+
+\pagebreak
+
+# Maps Comparison
+
+Comparison between MODIS and Reference rice maps, based on aggregation on 2x2 , 5x5 etc. grids
+
+```{r maps1, echo=FALSE, fig.height = 9, fig.cap = 'Comparison of MODIS and reference map - 2x2 km grids', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  a = maps_sar[[1]]
+  b = maps_modis[[1]]
+  grid.arrange(a,b)
+
+```
+
+\pagebreak
+
+
+```{r maps2, echo=FALSE, fig.height = 9, fig.cap = 'Comparison of MODIS and reference map - 5x5 km grids', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  a = maps_sar[[2]]
+  b = maps_modis[[2]]
+  grid.arrange(a,b)
+```
+
+\pagebreak
+
+
+```{r maps3, echo=FALSE, fig.height = 9, fig.cap = 'Comparison of MODIS and reference map - 10x10 km grids', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  a = maps_sar[[3]]
+  b = maps_modis[[3]]
+  grid.arrange(a,b)
+```
+
+\pagebreak
+
+s
+```{r maps4, echo=FALSE, fig.height = 9, fig.cap = 'Comparison of MODIS and reference map - 20x20 km grids', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  a = maps_sar[[4]]
+  b = maps_modis[[4]]
+  grid.arrange(a,b)
+```

@@ -1,0 +1,289 @@
+---
+title: "Interannual Variability of Phenological Dates - ERMES"
+output:
+  pdf_document:
+    fig_caption: yes
+---
+
+```{r processing, echo=FALSE, message = FALSE, error = FALSE, hide = TRUE, results = 'hide', warning = FALSE}
+
+# author: "Lorenzo Busetto ([busetto.l@irea.cnr.it](mailto:busetto.l@irea.cnr.it))"
+# library(raster)
+# library(sp)
+# library(gdalUtils)
+# library(rgdal)
+# library(data.table)
+# library(plyr)
+# library(ggplot2)
+# library(reshape)
+# library(grid)
+# library(gridExtra)
+# library(hash)
+# library("scales")
+# library(tools)
+# library(stringr)
+library(knitr)
+library(maptools)
+# country = 'IT'
+# 
+# Main_Folder = "//10.0.1.252/projects/ermes/datasets/rs_products/Phenology/%cc%/Outputs/v1.0/ERMES_Grid"
+# Grid_Folder = "//10.0.1.252/projects/ermes/datasets/ERMES_Folder_Structure/%cc%/Regional/%cc%_Reference_Grid/%cc%_ERMES_Regional_Grid.shp"
+# admin_shape = "//10.0.1.252/projects/ermes/datasets/rs_products/Phenology/Ancillary_Datasets/World_Provinces/provinces_world_laea_ermes.shp"
+# 
+# vers = '001'
+# selvar = c(1,1,1,1)
+# 
+# start_year = 2003
+# end_year 	 = 2015
+# 
+# start_sel_years = 2004
+# end_sel_years = 2015
+
+laea_crs = CRS("+init=epsg:3035 +proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0 +units=m +no_defs")
+geo_WGS84_crs = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0,0,0,0 ")
+
+ # opts_chunk$set(dev = 'pdf')
+  ermes_grid = str_replace_all(Grid_Folder,"%cc%",country)
+  in_RData_file = file.path(str_replace_all(Main_Folder,"%cc%",country),'RData',paste0('ERMES_Aggregates_',start_year,'_',end_year,'.RData'))
+  data_in = get(load(file = in_RData_file))
+  
+  #selected = as.character(seq(start_sel_years,end_sel_years, 1))
+  selected = as.character(seq(start_sel_years,end_sel_years, 1))
+  # selected2 = as.character(seq(start_sel_years,end_sel_years, 2))
+  data_in = droplevels(data_in[data_in$year %in% selected,])
+#   out_folder = file.path(str_replace_all(Main_Folder,"%cc%",country),'RData','pdf_plots')
+#   
+#   dir.create(out_folder, recursive = T)
+  # Retieve spatialpointsdataframe of cells for Italy
+  
+  ERMES_cells_poly = readOGR(dirname(ermes_grid) , basename(file_path_sans_ext(ermes_grid)))
+  ext_grd = extent(ERMES_cells_poly)
+  
+  #  # Retieve a polygon map of italian regions
+  
+  mapit = readOGR(dirname(admin_shape),file_path_sans_ext(basename(admin_shape)),	drop_unsupported_fields=T)
+  mapit_df = fortify(mapit, region = "name")
+  mapit_data = data.frame(id = unique(mapit_df$id), value = rnorm(174))
+  
+  # Add spatial info to the data_in fata frame + add some dummy variables
+  data_in$group = 1
+  data_in = join(data_in, ERMES_cells_poly@data, by = 'int_id')
+  data_in$variable = as.factor(data_in$variable)                 #  convert "variable" column to factor
+  data_in$year = as.factor(data_in$year)                 #  convert "year" column to factor
+  is.na(data_in) <- do.call(cbind,lapply(data_in, is.nan))
+  data_in = subset(data_in, !is.na(mean))																	# remove data with "NA" in the mean column
+  data_in[,"Date":=as.Date(strptime(paste("2008", data_in$mean), format="%Y %j") ),with=FALSE]
+  data_in$percol <- cut(100*data_in$perc_rice, breaks = c(0,1,10,20,30,40,50,60,70,80,90,100,110))     # catgorize the rice fc - 10 classes
+  data_in$variable = factor(data_in$variable,levels(data_in$variable)[c(3,4,1,2)])  # reorder the variables
+  data_in$rice_area = data_in$perc_rice*2000*2000           # compute retrieved area
+  
+  data_in = subset(data_in, is_rice == 1)  # ????? Consider if yes or not
+    data_in$variable = factor(data_in$variable, levels = c( 'MinDoys','SoSDoys', 'MaxDoys', 'MaxVis' ))
+  levels(data_in$variable) = c( 'DOY of Sowing', 'DOY of Emergence', 'DOY of Heading', 'Value of VI at Heading')
+  
+  # out_pdf = file.path(out_folder, 'grid_plots.pdf')
+  # savepdf(out_pdf)    # initialize plotting device
+
+``` 
+\newpage
+
+# Rice Cover Fraction
+
+
+```{r maps, echo=FALSE, fig.height =7, fig.cap = 'Map of estimated Rice fractional cover on 2x2 km ERMES Grid Cells', hide = TRUE, message = FALSE, error = FALSE, results = 'hide' }
+  # Build the plot for the rice fraction : Add points to the map, set colors and variables and set limits
+ if (country == 'IT') {ncols = 2} else {ncols = 4}
+  
+  data_mindoy = droplevels(subset(data_in, variable == 'DOY of Sowing' & data_in$year %in% selected))
+  p <- ggplot(data = data_mindoy, aes(x = x_LAEA, y = y_LAEA))
+  mapfract <- p + facet_wrap(~year, ncol = ncols)
+  mapfract <- mapfract + geom_tile(aes(fill = percol))
+  mapfract = mapfract +coord_fixed(xlim = c(ext_grd@xmin,ext_grd@xmax), ylim = c(ext_grd@ymin,ext_grd@ymax))
+  mapfract = mapfract + theme_bw() + labs(title = "Rice Cover Fraction", x = "Longitude", y = "Latitude")+ theme(plot.title = element_text(size = 14, vjust = 1))+ labs(x = "Longitude") + theme(axis.text.x  = element_text(size = 8) ,axis.text.y  = element_text(size = 8))+ theme(legend.position="right")+theme(plot.margin = unit(c(0.1,0.1,0.1,0.1), 'cm'))
+  # mapfract = mapfract + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+  mapfract <- mapfract + scale_fill_brewer('Rice cover Fraction', palette="RdYlGn")
+  mapfract <- mapfract + geom_polygon(data = mapit_df,aes(x = long, y = lat, group = group),  fill = 'transparent', colour = "black")
+ print(mapfract)
+```  
+
+\newpage
+
+
+# Sowing Dates
+
+
+```{r maps2, echo=FALSE, fig.height = 8, fig.cap = "Map of estimated Sowing Dates on 2x2 km ERMES Grid Cells", hide = TRUE, message = FALSE, error = FALSE}
+  
+  if (selvar [1] == 1){
+  # Build the plot for the mindoy maps : Add points to the map, set colors and variables and set limits
+  mapmin <- p + facet_wrap(~year, ncol = 4 )
+  mapmin <- mapmin + geom_tile(aes(fill = mean))
+  mapmin <- mapmin + scale_fill_gradientn('Doy of Sowing', limits=c(90, 160),colours = RColorBrewer::brewer.pal(10,"RdYlGn"))
+  mapmin = mapmin +coord_fixed(xlim = c(ext_grd@xmin,ext_grd@xmax), ylim = c(ext_grd@ymin,ext_grd@ymax))
+  mapmin = mapmin + theme_bw() + labs(title = "Doys of Sowing", x = "Longitude", y = "Latitude") + 
+    theme(plot.title = element_text(size = 14, vjust = 1)) + labs(x = "Longitude") + 
+    theme(axis.text.x  = element_text(size = 8), axis.text.y  = element_text(size = 8))+
+    theme(legend.position="right")+theme(plot.margin = unit(c(0.1,0.1,0.1,0.1), 'cm'))
+  mapmin <- mapmin + geom_polygon(data = mapit_df,aes(x = long, y = lat, group = group),  fill = 'transparent', colour = "black")
+  levels(data_in$variable)[1] = 'DOY of Sowing'
+  print(mapmin)
+  }
+``` 
+
+\newpage
+
+
+# SOS Dates
+
+
+``` {r mapssos, echo=FALSE, fig.height = 8, fig.cap = "Map of estimated Emergenge Dates on 2x2 km ERMES Grid Cells", hide = TRUE, message = FALSE, error = FALSE} 
+  # Build the plot for the sos doy maps : Add points to the map, set colors and variables and set limits
+  if (selvar [2] == 1){
+  data_sos = droplevels(subset(data_in, variable == 'DOY of Emergence' & data_in$year %in% selected))
+  p <- ggplot(data = data_sos, aes(x = x_LAEA, y = y_LAEA))
+  mapsos <- p + facet_wrap(~year, ncol = ncols)
+  mapsos <- mapsos + geom_tile(aes(fill = mean))
+  mapsos <- mapsos + scale_fill_gradientn('DOY of Emergence',colours = topo.colors(10), limits=c(105, 205), oob=squish)
+  mapsos = mapsos +coord_fixed(xlim = c(ext_grd@xmin,ext_grd@xmax), ylim = c(ext_grd@ymin,ext_grd@ymax))
+  mapsos = mapsos + theme_bw() + labs(title = "DOY of Emergence", x = "Longitude", y = "Latitude")+ 
+    theme(plot.title = element_text(size = 14, vjust = 1)) + labs(x = "Longitude") + 
+    theme(axis.text.x  = element_text(size = 8), axis.text.y  = element_text(size = 8))+
+    theme(legend.position="right")+theme(plot.margin = unit(c(0.1,0.1,0.1,0.1), 'cm'))
+  mapsos <- mapsos + geom_polygon(data = mapit_df,aes(x = long, y = lat, group = group),  fill = 'transparent', colour = "black")
+  levels(data_in$variable)[2] = 'DOY of Emergence'
+  mapsos
+  }
+``` 
+
+\newpage
+
+
+# Heading Dates
+
+
+``` {r mapsmax, echo=FALSE, fig.height = 8, fig.cap = "Map of estimated Heading Dates on 2x2 km ERMES Grid Cells", hide = TRUE, message = FALSE, error = FALSE} 
+  if (selvar [3] == 1){
+  # Build the plot for the maxdoy maps : Add points to the map, set colors and variables and set limits
+  
+  data_maxdoy = droplevels(subset(data_in, variable == 'DOY of Heading' & data_in$year %in% selected))
+  p <- ggplot(data = data_maxdoy, aes(x = x_LAEA, y = y_LAEA))
+  mapmax <- p + facet_wrap(~year, ncol = ncols)
+  mapmax <- mapmax + geom_tile(aes(fill = mean))
+  mapmax <- mapmax + scale_fill_gradientn('Doy of Heading',colours = topo.colors(10), limits=c(185, 285), oob=squish)
+  mapmax = mapmax +coord_fixed(xlim = c(ext_grd@xmin,ext_grd@xmax), ylim = c(ext_grd@ymin,ext_grd@ymax))
+  mapmax = mapmax + theme_bw() + labs(title = "Doys of Heading", x = "Longitude", y = "Latitude") +
+    theme(plot.title = element_text(size = 14, vjust = 1)) + labs(x = "Longitude") + 
+    theme(axis.text.x  = element_text(size = 8), axis.text.y  = element_text(size = 8))+
+    theme(legend.position="right")+theme(plot.margin = unit(c(0.1,0.1,0.1,0.1), 'cm'))
+  mapmax <- mapmax + geom_polygon(data = mapit_df,aes(x = long, y = lat, group = group),  fill = 'transparent', colour = "black")
+  levels(data_in$variable)[3] = 'DOY of Heading'
+  mapmax
+  }
+``` 
+
+\newpage
+
+
+# Max VIs
+
+
+``` {r mapsvi,  echo=FALSE, message = FALSE, error = FALSE, hide = TRUE, results = 'hide', warning = FALSE, fig.height = 8, fig.cap = "Map of Max EVI on 2x2 km ERMES Grid Cells"}  
+  # Build the plot for the maxvi maps : Add points to the map, set colors and variables and set limits
+  if (selvar [4] == 1){
+  data_maxvi = droplevels(subset(data_in, variable == 'Value of VI at Heading' & data_in$year %in% selected))
+  p <- ggplot(data = data_maxvi, aes(x = x_LAEA, y = y_LAEA))
+  mapvimax <- p + facet_wrap(~year, ncol = ncols)
+  mapvimax <- mapvimax + geom_tile(aes(fill = mean))
+  mapvimax <- mapvimax + scale_fill_gradientn('Value of VI at Heading',colours = topo.colors(10), limits=c(5000, 8000), oob=squish)
+  mapvimax = mapvimax +coord_fixed(xlim = c(ext_grd@xmin,ext_grd@xmax), ylim = c(ext_grd@ymin,ext_grd@ymax))
+  mapvimax = mapvimax + theme_bw() + labs(title = "Values of VI at Heading", x = "Longitude", y = "Latitude")+
+    theme(plot.title = element_text(size = 14, vjust = 1)) + labs(x = "Longitude") + 
+    theme(axis.text.x  = element_text(size = 8), axis.text.y  = element_text(size = 8))+
+    theme(legend.position="right")+theme(plot.margin = unit(c(0.1,0.1,0.1,0.1), 'cm'))
+  mapvimax <- mapvimax + geom_polygon(data = mapit_df,aes(x = long, y = lat, group = group),  fill = 'transparent', colour = "black")
+  levels(data_in$variable)[4] = 'Value of VI at Heading'
+  mapvimax
+  }
+``` 
+
+\newpage
+
+
+# BoxPlots
+
+
+``` {r mapsboxs,  echo=FALSE, message = FALSE, error = FALSE, hide = TRUE, results = 'hide', warning = FALSE, fig.height = 5,  fig.width = 7,fig.cap = "Map of Dates variability on 2x2 km ERMES Grid Cells"}  
+  # Build the boxplot of interannual variability of the four variables along years
+  
+
+
+ 
+  blank_data <- data.frame(variable = rep(c("DOY of Sowing", "DOY of Sowing","DOY of Emergence","DOY of Emergence", "DOY of Heading", "DOY of Heading",
+  "Value of VI at Heading", "Value of VI at Heading"), 14),  y = rep(as.Date(strptime(paste("2008",c(75,175,105,205,175,275,365,365)), format="%Y %j")),14), x = rep(levels(data_in$year), each = 2))
+ # blank_data$y = blank_data$y + sort((rep(seq(0,12),8)*365))
+  data_in$mean[which(data_in$variable == "DOY of Sowing" &  data_in$mean > 175)] = NA
+  data_in$mean[which(data_in$variable == "DOY of Sowing"&  data_in$mean < 75)] = NA
+  data_in$mean[which(data_in$variable == "DOY of Emergence"&  data_in$mean > 205)] = NA
+  data_in$mean[which(data_in$variable == "DOY of Emergence"&  data_in$mean < 105)] = NA
+  data_in$mean[which(data_in$variable == "DOY of Heading"&  data_in$mean > 275)] = NA
+  data_in$mean[which(data_in$variable == "DOY of Heading"&  data_in$mean < 175)] = NA
+  
+  data_in$Date[which(data_in$variable == "DOY of Sowing" &  data_in$mean > 175)] = NA
+  data_in$Date[which(data_in$variable == "DOY of Sowing"&  data_in$mean < 75)] = NA
+  data_in$Date[which(data_in$variable == "DOY of Emergence"&  data_in$mean > 205)] = NA
+  data_in$Date[which(data_in$variable == "DOY of Emergence"&  data_in$mean < 105)] = NA
+  data_in$Date[which(data_in$variable == "DOY of Heading"&  data_in$mean > 275)] = NA
+  data_in$Date[which(data_in$variable == "DOY of Heading"&  data_in$mean < 175)] = NA
+  
+  #
+  #	boxp1 = ggplot (data_in, aes (x = year, y = mean))
+  #	boxp1 = boxp1 + geom_blank(data = blank_data, aes(x = x, y = y))+ facet_wrap(~variable)
+  #	boxp1 = boxp1 + geom_boxplot(outlier.colour = 'transparent') + facet_wrap(~variable, scales = "free_y") + theme_bw()
+  #
+  #	boxp1 = boxp1 + theme_bw() + labs(title = "Interannual Variability of Retrieved Variables", x = "Year", y = "Values")+
+  #			theme(plot.title = element_text(size = 14, vjust = 1))+
+  #			theme(axis.text.x  = element_text(size = 8) ,axis.text.y  = element_text(size = 8))+ theme(legend.position="right")
+   # Build the boxplot of interannual variability of the four variables along years - above 10% of cover
+  
+  boxp2 = ggplot (data = droplevels(subset(data_in, perc_rice > 0.1 & variable != 'Value of VI at Heading')), aes (x = year, y = Date))
+  boxp2 = boxp2 + geom_boxplot(outlier.colour = 'transparent') + facet_wrap(~variable, scales = "free", drop = T, ncol = 2) + theme_bw()
+  boxp2 = boxp2 + theme_bw() + labs(title = "Interannual Variability of Retrieved Variables - cells above 10 % cover", x = "Year", y = "Date")+
+  theme(plot.title = element_text(size = 14, vjust = 1))+
+  theme(axis.text.x  = element_text(size = 8, angle = 45, vjust = 0.5) ,axis.text.y  = element_text(size = 8))+ theme(legend.position="right")
+  boxp2 = boxp2 + geom_blank(data = subset(blank_data, variable != 'Value of VI at Heading'), aes(x = x, y = y))
+  boxp2 + scale_y_date(labels = date_format("%m/%d"))
+  #	print(grid.arrange( boxp1, boxp2, ncol=1))
+  #	
+  
+  stats = ddply(data_in, .(variable),summarize, avg = mean(Date, na.rm = T), sd = sd(Date, na.rm = T))
+
+```
+
+
+
+``` {r mapsarea, echo=FALSE, fig.height = 5, fig.cap = "Map of Area variability on 2x2 km ERMES Grid Cells", hide = TRUE, message = FALSE, error = FALSE, warnings = FALSE, results = 'hide'}    
+ 
+  # Build the barplot of interannual variability of the detected rice area along years
+  	data_sub =  subset(data_in, variable == 'DOY of Sowing')
+  	data_sub_area = ddply(data_sub, .(year), summarize, tot_area = sum(rice_area)/10000)
+  	barplot1 = ggplot(data_sub_area, aes(x = year, y = tot_area))
+  	barplot1 = barplot1 + geom_bar(stat = 'identity')
+  	barplot1 = barplot1 + theme_bw() + labs(title = "Interannual Variability of total estimated rice area", x = "Year", y = "Area (ha)")+
+  			theme(plot.title = element_text(size = 14, vjust = 1))+ theme(axis.text.x  = element_text(size = 8) ,axis.text.y  = element_text(size = 8))
+  
+  
+  # Build the barplot of interannual variability of the detected rice area - above 10% of cover
+  data_sub =  subset(data_in, variable == 'DOY of Sowing' & perc_rice > 0.1)
+  data_sub_area = ddply(data_sub, .(year), summarize, tot_area = sum(rice_area)/10000)
+  barplot2 = ggplot(data_sub_area, aes(x = year, y = tot_area))
+  barplot2 = barplot2 + geom_bar(stat = 'identity')
+  barplot2 = barplot2 + theme_bw() + labs(title = "Interannual Variability of total estimated rice area - cells above 10 % cover", x = "Year", y = "Area (ha)")+
+  theme(plot.title = element_text(size = 14, vjust = 1))+ theme(axis.text.x  = element_text(size = 8) ,axis.text.y  = element_text(size = 8))
+   barplot2
+  	# grid.arrange( barplot1, barplot2, ncol=1)
+  
+#   dev.off()
+#   }    #End Cycle on countries
+  
+``` 
+ 
