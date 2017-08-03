@@ -1,5 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/phenoriceR)](https://cran.r-project.org/package=phenoriceR)
+
 phenoriceR
 ==========
 
