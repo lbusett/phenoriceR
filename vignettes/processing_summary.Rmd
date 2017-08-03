@@ -99,7 +99,7 @@ and masked on the region of interest. We can work starting from that folder, now
 
 Let's see some quick plots: 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
 subsets_folder <- "/home/lb/my_data/prasia/mosaics/ordered/subsets"
 sosfile <- get(load(file.path(subsets_folder, "Nueva_Ecija", "sos.RData")))
 # find the bands of "s2" season
