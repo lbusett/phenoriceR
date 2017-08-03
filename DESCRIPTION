@@ -1,11 +1,18 @@
 Package: phenoriceR
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
+Title: Routines for analysis of PhenoRice outputs
+Authors@R: person("Lorenzo", "Busetto", email = "busetto.l@irea.cnr.it", role = c("aut", "cre"))
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/lbusett/phenoriceR
+BugReports: https://github.com/lbusett/phenoriceR/issues
+Suggests: testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1
