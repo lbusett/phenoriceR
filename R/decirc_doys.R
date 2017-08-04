@@ -33,7 +33,7 @@ decirc_phenorice <- function(in_folder, out_folder){
   #   in a multiband
 
   for (in_var in c("sos", "eos", "pos")) {
-    in_file <- list.files(in_folder, pattern = paste0(in_var, "_*.tif$"),
+    in_file <- list.files(in_folder, pattern = glob2rx(paste0(in_var, "_*.tif$")),
                           full.names = TRUE)
 
     # out_RData <- file.path(out_folder, paste0(in_var, "_decirc.RData"))
@@ -49,13 +49,15 @@ decirc_phenorice <- function(in_folder, out_folder){
       out_file  <- file.path(tmp_folder,
                              paste(in_var, sprintf("%03i", yy), "decirc.tif", sep = "_"))
       diffdays  <- as.numeric(years[yy] - as.Date("2000-01-01"))
+
       raster::calc(in_rast[[yy]],
                    fun = function(x) {x + diffdays},
                    filename = out_file,
-                   ot = "UInt16",
+                   ot = "INT2S",
                    options = "COMPRESS=DEFLATE",
                    overwrite = TRUE,
                    NAflag = 32767)
+
     }
 
 
@@ -91,3 +93,6 @@ decirc_phenorice <- function(in_folder, out_folder){
     save(out_rast, file = paste0(tools::file_path_sans_ext(out_file), ".RData"))
   }
 }
+
+in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/"
+out_folder <- file.path(in_folder, "decirc")

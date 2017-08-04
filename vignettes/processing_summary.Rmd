@@ -5,6 +5,8 @@ output:
     toc: yes
     toc_depth: '2'
     highlight: haddock
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -16,6 +18,16 @@ library(tibble)
 library(raster)
 library(phenoriceR)
 library(dplyr)
+library(mapview)
+library(RColorBrewer)
+
+mapviewOptions(basemaps = c("Esri.WorldImagery", "OpenStreetMap.DE"),
+               raster.palette = colorRampPalette(brewer.pal(9, "RdYlGn")),
+               vector.palette = colorRampPalette(brewer.pal(9, "YlGnBu")),
+               na.color = "transparent",
+               layers.control.pos = "topright")
+
+
 ```
 
 Here I am going to document the passages required to extract data from PhenoRice mosaics
@@ -73,7 +85,8 @@ in_country  <- "PHL"
 boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
   sf::st_as_sf() %>% 
   sf::st_combine() %>%
-  sf::st_sf(id = 1, sf_column_name = ".") 
+  sf::st_sf(id = 1, sf_column_name = ".") %>% 
+  sf::st_transform(get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
 
 
 # It's also possible to mask directly on a "province":
@@ -83,7 +96,8 @@ in_country  <- "PHL"
 boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
   sf::st_as_sf() %>%
   dplyr::filter(NAME_1 == "Nueva Ecija") %>% 
-  sf::st_as_sf()
+  sf::st_as_sf()%>% 
+  sf::st_transform(get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
 
 # boundmask <- sf::st_transform(boundmask, get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/sos_02_decirc.tif"))
 
@@ -99,22 +113,23 @@ and masked on the region of interest. We can work starting from that folder, now
 
 Let's see some quick plots: 
 
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 subsets_folder <- "/home/lb/my_data/prasia/mosaics/ordered/subsets"
 sosfile <- get(load(file.path(subsets_folder, "Nueva_Ecija", "sos.RData")))
 # find the bands of "s2" season
 which_s2 <- which(regexpr("_s2", names(sosfile)) != -1)
-sprawl::plot_rast(sosfile[[which_s2]], 
+sprawl::plot_rast(sosfile[[which_s2]],
                   title = "SOS doy - Season 2 - Nueva Ecija")
 
 eosfile <- get(load(file.path(subsets_folder, "Nueva_Ecija", "eos.RData")))
-sprawl::plot_rast(eosfile[[which_s2]], 
+sprawl::plot_rast(eosfile[[which_s2]],
                   title = "EOS doy- Season 2 - Nueva Ecija")
 
 lgtfile <- get(load(file.path(subsets_folder, "Nueva_Ecija", "veglgt.RData")))
-sprawl::plot_rast(lgtfile[[which_s2]], 
-                  title = "Length vegetative season - Season 2 - Nueva Ecija", 
+sprawl::plot_rast(lgtfile[[which_s2]],
+                  title = "Length vegetative season - Season 2 - Nueva Ecija",
                   limits = c(50, 80))
+# leaflet() + mapview(sosfile, hide = T)
 
 ```
 
@@ -146,7 +161,7 @@ to the date by simply "adding" the values reported to the raster to 01/01/2000)
 it, but since we need to do it only once we can live with it for the mkoment. Moreover, when
 working on smaller subsets it is reasonably fast, so I'll stay like this at the moment)
 
-```{r message=FALSE, warning=FALSE}
+```{r eval = FALSE, message=FALSE, warning=FALSE}
 in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/subsets/Nueva_Ecija"
 out_folder <- file.path(in_folder, "decirc")
 decirc_phenorice(in_folder, out_folder)
@@ -265,9 +280,3 @@ That's all for now. I'll continue working on this in the next days. In particula
 to start working on the Rice Atlas, and also on functions to analyze temporal trends (for 
 that, I think we'll have to define some methods for clustering the data, or at least identify
 the main modes in the distribution)
-
-
-
-
-
-
