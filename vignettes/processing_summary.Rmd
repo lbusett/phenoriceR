@@ -86,7 +86,7 @@ boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
   sf::st_as_sf() %>% 
   sf::st_combine() %>%
   sf::st_sf(id = 1, sf_column_name = ".") %>% 
-  sf::st_transform(get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
+  sf::st_transform(get_proj4string("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
 
 
 # It's also possible to mask directly on a "province":
@@ -97,9 +97,9 @@ boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
   sf::st_as_sf() %>%
   dplyr::filter(NAME_1 == "Nueva Ecija") %>% 
   sf::st_as_sf()%>% 
-  sf::st_transform(get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
+  sf::st_transform(get_proj4string("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
 
-# boundmask <- sf::st_transform(boundmask, get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/sos_02_decirc.tif"))
+# boundmask <- sf::st_transform(boundmask, get_proj4string("/home/lb/my_data/prasia/mosaics/ordered/decirc/sos_02_decirc.tif"))
 
 extract_subarea(mosaic_folder,
                 boundmask,
@@ -113,7 +113,7 @@ and masked on the region of interest. We can work starting from that folder, now
 
 Let's see some quick plots: 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = FALSE}
 subsets_folder <- "/home/lb/my_data/prasia/mosaics/ordered/subsets"
 sosfile <- get(load(file.path(subsets_folder, "Nueva_Ecija", "sos.RData")))
 # find the bands of "s2" season
@@ -129,7 +129,15 @@ lgtfile <- get(load(file.path(subsets_folder, "Nueva_Ecija", "veglgt.RData")))
 sprawl::plot_rast(lgtfile[[which_s2]],
                   title = "Length vegetative season - Season 2 - Nueva Ecija",
                   limits = c(50, 80))
-# leaflet() + mapview(sosfile, hide = T)
+
+net <- create_fishnet(sosfile[[1]], cellsize = 3500, shape = "hex")
+extr_data <- extract_rast(sosfile[[which_s2]], net, full_data = FALSE)
+datain <- extr_data$stats %>% 
+  # dplyr::filter(band_name == "sos_2003_s2") %>% 
+  dplyr::filter(!is.na(avg))
+borders <- get_boundaries("PHL", level = 1)
+a = plot_vect(datain, fill_var = "avg", borders = borders, leg_type = "qual", 
+          title = "Sowing dates") + facet_wrap(~band_name)
 
 ```
 
@@ -161,19 +169,29 @@ to the date by simply "adding" the values reported to the raster to 01/01/2000)
 it, but since we need to do it only once we can live with it for the mkoment. Moreover, when
 working on smaller subsets it is reasonably fast, so I'll stay like this at the moment)
 
-```{r eval = FALSE, message=FALSE, warning=FALSE}
-in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/subsets/Nueva_Ecija"
+```{r eval = FALSE, message=FALSE, warning=FALSE, eval = FALSE}
+in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/"
 out_folder <- file.path(in_folder, "decirc")
 decirc_phenorice(in_folder, out_folder)
 ```
 
-Let'see what we get inside the decircularized data: 
+Let's mask again the de-circularized data on Nueva Ecija: 
 
-```{r, message=FALSE, warning=FALSE}
-insos_decirc <- get(load(
-  "/home/lb/my_data/prasia/mosaics/ordered/subsets/Nueva_Ecija/decirc/sos_decirc.RData"
-))
-summary(insos_decirc[[1:8]])
+```{r, message=FALSE, warning=FALSE, eval = FALSE }
+in_folder <- "/home/lb/my_data/prasia/mosaics/ordered/decirc/"
+
+subset_name <- "Nueva_Ecija"
+in_country  <- "PHL"
+boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
+  sf::st_as_sf() %>%
+  dplyr::filter(NAME_1 == "Nueva Ecija") %>% 
+  sf::st_as_sf()%>% 
+  sf::st_transform(get_proj4string("/home/lb/my_data/prasia/mosaics/ordered/decirc/full/eos_decirc.tif"))
+
+insos_decirc_NE <- mask_rast(r, boundmask, crop = T,
+                             out_filename = file.path(in_folder,"subsets/NE/insos_NE.tif"), 
+                             parallel = T)
+summary(insos_decirc_NE[[1:8]])
 ```
 
 You see that the "dates" are more or less monotonically increasing on the different seasons,
@@ -181,10 +199,9 @@ though there are some overlaps. Analyzing the seasons separately would therefore
 difficult. So, it's better to put everyting in a single array (note that here I can do this brute 
 force, but for larger areas it will be impossible): 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = FALSE}
 # get the data for three years as an array that contains all detected sos dates in Nueva 
 # Ecijia as a single array
-
 
 sos = (as.Date("2000-01-01") + raster::getValues(insos_decirc[[1:24]]))
 sos = sos[!is.na(sos)]
@@ -209,13 +226,14 @@ without having to think about to which "season" PhenoRice assigned the sos.
 To be able to work with a manageable number of "pixels" over large areas, and also to create
 large-scale maps, it could be worthy to aggregate the results over regular grids: 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = FALSE}
 
-in_fishnet <- sprawl::create_fishnet(insos_decirc, pix_for_cell = 21)
+in_fishnet <- sprawl::create_fishnet(insos_decirc, pix_for_cell = 21, 
+                                     shape = "hex")
 plot_rast(insos_decirc[[2]], in_poly = in_fishnet)
 insos_decirc_5k <- extract_rast(insos_decirc, 
                                 in_fishnet, 
-                                addgeom = FALSE, 
+                                join_geom = FALSE, 
                                 verbose = FALSE)
 
 insos5kdata <- insos_decirc_5k$alldata %>% 
@@ -238,7 +256,7 @@ Again, having de-circulated the doys allows to treat all data as a continuous se
 Here I plot the frequency histograms derived by considering all Nueva Ecjia cells with fc 
 above 0.5: 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = FALSE}
 insos5kdata_filt <- insos5kdata %>% 
   dplyr::filter(fc >= 0.5)
 insos5kdata_filt
@@ -254,7 +272,7 @@ ggplot(insos5kdata_filt, aes(x = sosdate)) +
 To analyze interannual variations, we will have however to "split" the series somewhere, 
 but now we can decide where. Here I try with october.  
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = FALSE}
 years <- 2002:2016
 season <- cut((insos5kdata_filt$sosdate), 
   breaks = as.Date(paste(years,"-01-10",sep="")),
