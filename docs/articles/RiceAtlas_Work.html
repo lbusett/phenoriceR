@@ -45,6 +45,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/aaaa.html">Untitled</a>
+    </li>
+    <li>
       <a href="../articles/processing_summary.html">Processing passages</a>
     </li>
     <li>
@@ -87,11 +90,17 @@
 <a href="#some-questions" class="anchor"></a>Some Questions</h2>
 <ol style="list-style-type: decimal">
 <li><p>What’s the difference between RiceCalendar_v1 and RiceProduction_v1 ? Which should we use ?</p></li>
-<li><p>Is there a “legend” explaining the meaning of the different columns ?</p></li>
-<li><p>What is “Maturity” ? Can we relate it to “Heading” ?</p></li>
-<li><p>What is “seed_age” ?</p></li>
-<li><p>Where are the areas reported ?</p></li>
+<li><p>What is “Maturity” ?</p></li>
 </ol>
+<p>Maturity is the length of season. Not clear however what <code>MATURITYS</code> and <code>MATURITYE</code> are. Bhogendra will check.</p>
+<ol start="4" style="list-style-type: decimal">
+<li>What is “seed_age” ?</li>
+</ol>
+<p>Understood. Information is probably not relevant for our purposes</p>
+<ol start="3" style="list-style-type: decimal">
+<li>Where are the areas reported ?</li>
+</ol>
+<p>Areas are on the right-most columns of RiceProduction.</p>
 </div>
 <div id="processing-needed" class="section level2">
 <h2 class="hasAnchor">
@@ -110,19 +119,20 @@
 <p>Reshape the “data” columns to long format. What I’m thinking of is something on these lines:</p>
 <table class="table">
 <colgroup>
-<col width="7%">
+<col width="6%">
 <col width="5%">
 <col width="4%">
 <col width="4%">
-<col width="13%">
+<col width="12%">
 <col width="9%">
-<col width="9%">
-<col width="8%">
-<col width="8%">
-<col width="4%">
-<col width="8%">
 <col width="8%">
 <col width="7%">
+<col width="7%">
+<col width="4%">
+<col width="7%">
+<col width="7%">
+<col width="6%">
+<col width="6%">
 </colgroup>
 <thead><tr class="header">
 <th align="center">OBJECTID</th>
@@ -137,7 +147,8 @@
 <th align="center">end</th>
 <th align="center">ricearea</th>
 <th align="center">totarea</th>
-<th align="center">ricefc</th>
+<th align="center">rice_fc</th>
+<th align="center">riceprod</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -154,6 +165,7 @@
 <td align="center">2500</td>
 <td align="center">5000</td>
 <td align="center">0.5</td>
+<td align="center">2.1</td>
 </tr>
 <tr class="even">
 <td align="center">1</td>
@@ -168,7 +180,8 @@
 <td align="center">120</td>
 <td align="center">1000</td>
 <td align="center">5000</td>
-<td align="center">0.2</td>
+<td align="center">0.5</td>
+<td align="center">1.1</td>
 </tr>
 <tr class="odd">
 <td align="center">1</td>
@@ -183,54 +196,10 @@
 <td align="center">NA</td>
 <td align="center">NA</td>
 <td align="center">5000</td>
-<td align="center">NA</td>
-</tr>
-<tr class="even">
-<td align="center">1</td>
-<td align="center">VNM</td>
-<td align="center">…</td>
-<td align="center">2</td>
-<td align="center">Winter-spring</td>
-<td align="center">first</td>
-<td align="center">flow</td>
-<td align="center">60</td>
-<td align="center">70</td>
-<td align="center">80</td>
-<td align="center">2500</td>
-<td align="center">5000</td>
 <td align="center">0.5</td>
-</tr>
-<tr class="odd">
-<td align="center">1</td>
-<td align="center">VNM</td>
-<td align="center">…</td>
-<td align="center">2</td>
-<td align="center">Summer</td>
-<td align="center">second</td>
-<td align="center">flow</td>
-<td align="center">150</td>
-<td align="center">160</td>
-<td align="center">170</td>
-<td align="center">1000</td>
-<td align="center">5000</td>
-<td align="center">0.2</td>
+<td align="center">NA</td>
 </tr>
 <tr class="even">
-<td align="center">1</td>
-<td align="center">VNM</td>
-<td align="center">…</td>
-<td align="center">2</td>
-<td align="center">NA</td>
-<td align="center">third</td>
-<td align="center">flow</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">5000</td>
-<td align="center">NA</td>
-</tr>
-<tr class="odd">
 <td align="center">1</td>
 <td align="center">VNM</td>
 <td align="center">…</td>
@@ -244,8 +213,9 @@
 <td align="center">2500</td>
 <td align="center">5000</td>
 <td align="center">0.5</td>
+<td align="center">2.1</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="center">1</td>
 <td align="center">VNM</td>
 <td align="center">…</td>
@@ -258,9 +228,10 @@
 <td align="center">210</td>
 <td align="center">1000</td>
 <td align="center">5000</td>
-<td align="center">0.2</td>
+<td align="center">0.5</td>
+<td align="center">1.1</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="center">1</td>
 <td align="center">VNM</td>
 <td align="center">…</td>
@@ -273,6 +244,55 @@
 <td align="center">NA</td>
 <td align="center">NA</td>
 <td align="center">5000</td>
+<td align="center">0.5</td>
+<td align="center">NA</td>
+</tr>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">VNM</td>
+<td align="center">…</td>
+<td align="center">2</td>
+<td align="center">Winter-spring</td>
+<td align="center">first</td>
+<td align="center">mat</td>
+<td align="center">60</td>
+<td align="center">70</td>
+<td align="center">80</td>
+<td align="center">2500</td>
+<td align="center">5000</td>
+<td align="center">0.5</td>
+<td align="center">2.1</td>
+</tr>
+<tr class="even">
+<td align="center">1</td>
+<td align="center">VNM</td>
+<td align="center">…</td>
+<td align="center">2</td>
+<td align="center">Summer</td>
+<td align="center">second</td>
+<td align="center">mat</td>
+<td align="center">150</td>
+<td align="center">160</td>
+<td align="center">170</td>
+<td align="center">1000</td>
+<td align="center">5000</td>
+<td align="center">0.5</td>
+<td align="center">1.1</td>
+</tr>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">VNM</td>
+<td align="center">…</td>
+<td align="center">2</td>
+<td align="center">NA</td>
+<td align="center">third</td>
+<td align="center">mat</td>
+<td align="center">NA</td>
+<td align="center">NA</td>
+<td align="center">NA</td>
+<td align="center">NA</td>
+<td align="center">5000</td>
+<td align="center">0.5</td>
 <td align="center">NA</td>
 </tr>
 <tr class="even">
@@ -289,6 +309,7 @@
 <td align="center">2500</td>
 <td align="center">5000</td>
 <td align="center">0.5</td>
+<td align="center">3</td>
 </tr>
 <tr class="odd">
 <td align="center">2</td>
@@ -303,7 +324,8 @@
 <td align="center">125</td>
 <td align="center">1000</td>
 <td align="center">5000</td>
-<td align="center">0.2</td>
+<td align="center">0.5</td>
+<td align="center">2</td>
 </tr>
 <tr class="even">
 <td align="center">2</td>
@@ -318,12 +340,13 @@
 <td align="center">210</td>
 <td align="center">500</td>
 <td align="center">5000</td>
-<td align="center">0.1</td>
+<td align="center">0.5</td>
+<td align="center">1</td>
 </tr>
 </tbody>
 </table>
 </li>
-<li><p>This could be done either manually or in <code>R</code> by importing the dataset to a <code>sf</code> object and then using either functionalities from <code><a href="http://www.rdocumentation.org/packages/reshape2/topics/melt">reshape2::melt</a></code> or <code>dplyr::gather</code>. I’d suggest the second solution, which is less error-prone and recyclable/reproducible (and can be modified if we decide that we need something more/less/different. The function could be added to <code>PhenoriceR</code> package.</p></li>
+<li><p>This could be done either manually or in <code>R</code> by importing the dataset to a <code>sf</code> object and then using either functionalities from <code><a href="http://www.rdocumentation.org/packages/reshape2/topics/melt">reshape2::melt</a></code> or <code><a href="http://www.rdocumentation.org/packages/tidyr/topics/gather">tidyr::gather</a></code>. I’d suggest the second solution, which is less error-prone and recyclable/reproducible (and can be modified if we decide that we need something more/less/different. The function could be added to <code>PhenoriceR</code> package.</p></li>
 <li><p>For Bhogendra: Is it possible for you to work onthis re-sahping ?</p></li>
 </ul>
 </div>
