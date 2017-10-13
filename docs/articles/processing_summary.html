@@ -47,6 +47,12 @@
 <li>
       <a href="../articles/processing_summary.html">Processing passages</a>
     </li>
+    <li>
+      <a href="../articles/RiceAtlas_Comparison.html">RiceAtlas Comparison</a>
+    </li>
+    <li>
+      <a href="../articles/RiceAtlas_Work.html">RiceAtlas - Questions and proposals for processing</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -112,30 +118,33 @@ patterns       &lt;-<span class="st"> </span><span class="kw">c</span>(<span cla
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#   ____________________________________________________________________________</span>
 <span class="co">#   set input and output folders                                            ####</span>
 
-mosaic_folder  &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/ordered"</span>
-subsets_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/ordered/subsets"</span>
+mosaic_folder  &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/"</span>
+subsets_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/subsets"</span>
+<span class="kw">make_folder</span>(subsets_folder, <span class="dt">type =</span> <span class="st">"dirname"</span>, <span class="dt">verbose =</span> T)
 
 <span class="co">#   ____________________________________________________________________________</span>
 <span class="co">#   define subsetting area: choose a country                  ####</span>
 
 subset_name &lt;-<span class="st"> "PHL"</span>
 in_country  &lt;-<span class="st"> "PHL"</span>
-boundmask   &lt;-<span class="st"> </span>sprawl::<span class="kw">get_boundaries</span>(in_country, <span class="dt">level =</span> <span class="dv">1</span>) %&gt;%
-<span class="st">  </span>sf::<span class="kw">st_as_sf</span>() %&gt;%<span class="st"> </span>
-<span class="st">  </span>sf::<span class="kw">st_combine</span>() %&gt;%
-<span class="st">  </span>sf::<span class="kw">st_sf</span>(<span class="dt">id =</span> <span class="dv">1</span>, <span class="dt">sf_column_name =</span> <span class="st">"."</span>) 
+boundmask   &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/get_boundaries">get_boundaries</a></span>(in_country, <span class="dt">level =</span> <span class="dv">1</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/geos_combine">st_combine</a></span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/sf">st_sf</a></span>(<span class="dt">id =</span> <span class="dv">1</span>, <span class="dt">sf_column_name =</span> <span class="st">"."</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw">get_proj4string</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/eos_decirc.tif"</span>))
 
 
 <span class="co"># It's also possible to mask directly on a "province":</span>
 
 subset_name &lt;-<span class="st"> "Nueva_Ecija"</span>
 in_country  &lt;-<span class="st"> "PHL"</span>
-boundmask   &lt;-<span class="st"> </span>sprawl::<span class="kw">get_boundaries</span>(in_country, <span class="dt">level =</span> <span class="dv">1</span>) %&gt;%
-<span class="st">  </span>sf::<span class="kw">st_as_sf</span>() %&gt;%
-<span class="st">  </span>dplyr::<span class="kw">filter</span>(NAME_1 ==<span class="st"> "Nueva Ecija"</span>) %&gt;%<span class="st"> </span>
-<span class="st">  </span>sf::<span class="kw">st_as_sf</span>()
+boundmask   &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/get_boundaries">get_boundaries</a></span>(in_country, <span class="dt">level =</span> <span class="dv">1</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(NAME_<span class="dv">1</span> <span class="op">==</span><span class="st"> "Nueva Ecija"</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>()<span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw">get_proj4string</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.tif"</span>))
 
-<span class="co"># boundmask &lt;- sf::st_transform(boundmask, get_projstring("/home/lb/my_data/prasia/mosaics/ordered/decirc/sos_02_decirc.tif"))</span>
+<span class="co"># boundmask &lt;- sf::st_transform(boundmask, get_proj4string("/home/lb/my_data/prasia/mosaics/ordered/decirc/sos_02_decirc.tif"))</span>
 
 <span class="kw"><a href="../reference/extract_subarea.html">extract_subarea</a></span>(mosaic_folder,
                 boundmask,
@@ -143,21 +152,45 @@ boundmask   &lt;-<span class="st"> </span>sprawl::<span class="kw">get_boundarie
                 <span class="dt">out_folder  =</span> subsets_folder)</code></pre></div>
 <p>Now, in “out_folder/subsets/subsets_name” we have the “ordered” phenorice tiffs, subsetted and masked on the region of interest. We can work starting from that folder, now.</p>
 <p>Let’s see some quick plots:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">subsets_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/ordered/subsets"</span>
-sosfile &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(<span class="kw">file.path</span>(subsets_folder, <span class="st">"Nueva_Ecija"</span>, <span class="st">"sos.RData"</span>)))
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">subsets_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/subsets/"</span>
+sosfile &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(<span class="kw">file.path</span>(subsets_folder, <span class="st">"Nueva_Ecija/param_series/orig/"</span>, <span class="st">"sos.RData"</span>)))
+boundaries &lt;-<span class="st"> </span><span class="kw">get_boundaries</span>(<span class="st">"PHL"</span>, <span class="dv">1</span>)
 <span class="co"># find the bands of "s2" season</span>
-which_s2 &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">regexpr</span>(<span class="st">"_s2"</span>, <span class="kw">names</span>(sosfile)) !=<span class="st"> </span>-<span class="dv">1</span>)
-sprawl::<span class="kw">plot_rast</span>(sosfile[[which_s2]], 
-                  <span class="dt">title =</span> <span class="st">"SOS doy - Season 2 - Nueva Ecija"</span>)</code></pre></div>
+which_s2 &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">regexpr</span>(<span class="st">"_s2"</span>, <span class="kw">names</span>(sosfile)) <span class="op">!=</span><span class="st"> </span><span class="op">-</span><span class="dv">1</span>)
+sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/plot_rast_gg">plot_rast_gg</a></span>(sosfile[[which_s2[<span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">6</span>,<span class="dv">8</span>,<span class="dv">10</span>)]]],
+                     <span class="dt">title =</span> <span class="st">"SOS doy - Season 2 - Nueva Ecija"</span>,
+                     <span class="dt">palette_name =</span> <span class="st">"RdYlGn"</span>, <span class="dt">zlims =</span> <span class="kw">c</span>(<span class="fl">0.02</span>,<span class="fl">0.98</span>), <span class="dt">zlims_type =</span> <span class="st">"percs"</span>, 
+                     <span class="dt">outliers_style =</span> <span class="st">"to_minmax"</span>, <span class="dt">na.color =</span> <span class="st">"transparent"</span>, 
+                     <span class="dt">borders_layer =</span> boundaries, 
+                     <span class="dt">scalebar_dist =</span> <span class="dv">20</span>)</code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-4-1.png" width="672"></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">eosfile &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(<span class="kw">file.path</span>(subsets_folder, <span class="st">"Nueva_Ecija"</span>, <span class="st">"eos.RData"</span>)))
-sprawl::<span class="kw">plot_rast</span>(eosfile[[which_s2]], 
-                  <span class="dt">title =</span> <span class="st">"EOS doy- Season 2 - Nueva Ecija"</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">eosfile &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(<span class="kw">file.path</span>(subsets_folder, <span class="st">"Nueva_Ecija/param_series/orig/"</span>, <span class="st">"eos.RData"</span>)))
+<span class="kw">NAvalue</span>(eosfile) =<span class="st"> </span><span class="op">-</span><span class="dv">999</span>
+sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/plot_rast_gg">plot_rast_gg</a></span>(eosfile[[which_s2[<span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">6</span>,<span class="dv">8</span>,<span class="dv">10</span>)]]],
+                     <span class="dt">title =</span> <span class="st">"EOS doy- Season 2 - Nueva Ecija"</span>,
+                     <span class="dt">palette_name =</span> <span class="st">"RdYlGn"</span>, <span class="dt">zlims =</span> <span class="kw">c</span>(<span class="fl">0.02</span>,<span class="fl">0.98</span>), <span class="dt">zlims_type =</span> <span class="st">"percs"</span>, 
+                     <span class="dt">outliers_style =</span> <span class="st">"to_minmax"</span>, <span class="dt">na.color =</span> <span class="st">"transparent"</span>, 
+                     <span class="dt">borders_layer =</span> boundaries, 
+                     <span class="dt">scalebar_dist =</span> <span class="dv">20</span>)</code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-4-2.png" width="672"></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lgtfile &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(<span class="kw">file.path</span>(subsets_folder, <span class="st">"Nueva_Ecija"</span>, <span class="st">"veglgt.RData"</span>)))
-sprawl::<span class="kw">plot_rast</span>(lgtfile[[which_s2]], 
-                  <span class="dt">title =</span> <span class="st">"Length vegetative season - Season 2 - Nueva Ecija"</span>, 
-                  <span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">50</span>, <span class="dv">80</span>))</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Extract data on a fishnet and plot as a vector</span>
+net &lt;-<span class="st"> </span><span class="kw">create_fishnet</span>(sosfile[[<span class="dv">1</span>]], <span class="dt">cellsize =</span> <span class="dv">3500</span>, <span class="dt">shape =</span> <span class="st">"hex"</span>)
+extr_data &lt;-<span class="st"> </span><span class="kw">extract_rast</span>(sosfile[[which_s2]], net, <span class="dt">full_data =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<pre><code>## 
+  |                                                                       
+  |                                                                 |   0%</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">datain &lt;-<span class="st"> </span>extr_data<span class="op">$</span>stats <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="co"># dplyr::filter(band_name == "sos_2003_s2") %&gt;% </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="op">!</span><span class="kw">is.na</span>(avg))
+borders &lt;-<span class="st"> </span><span class="kw">get_boundaries</span>(<span class="st">"PHL"</span>, <span class="dt">level =</span> <span class="dv">1</span>)
+dataplot &lt;-<span class="st"> </span>datain <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(band_name <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">"sos_2003_s2"</span>, <span class="st">"sos_2007_s2"</span>, <span class="st">"sos_2011_s2"</span>, 
+                                 <span class="st">"sos_2015_s2"</span>))
+<span class="kw">plot_vect</span>(dataplot, <span class="dt">fill_var =</span> <span class="st">"avg"</span>,
+              <span class="dt">borders_layer =</span> borders,
+              <span class="dt">palette =</span> <span class="st">"RdYlGn"</span>, 
+              <span class="dt">na.color =</span> <span class="st">"transparent"</span>, 
+              <span class="dt">title =</span> <span class="st">"Sowing dates"</span>) <span class="op">+</span><span class="st"> </span><span class="kw">facet_wrap</span>(<span class="op">~</span>band_name)</code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-4-3.png" width="672"></p>
 </div>
 <div id="extract-data-in-an-analysis-friendly-format" class="section level2">
@@ -175,42 +208,56 @@ sprawl::<span class="kw">plot_rast</span>(lgtfile[[which_s2]],
 <p>By “decircularize” I mean going from the DOY representation to a Julian Date representation, which has the advantage of being a continouos monotonically increasing variable.</p>
 <p>sos, eos and pos dates are therefore here converted to a numeric variable representing the number of days elapsed since 01/01/2000. (Note however that it is always possible to go back to the date by simply “adding” the values reported to the raster to 01/01/2000)</p>
 <p>(This passage is very slow on the full mosaics because I didn’t have time yet to optimize it, but since we need to do it only once we can live with it for the mkoment. Moreover, when working on smaller subsets it is reasonably fast, so I’ll stay like this at the moment)</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_folder  &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/ordered/subsets/Nueva_Ecija"</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_folder  &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig"</span>
 out_folder &lt;-<span class="st"> </span><span class="kw">file.path</span>(in_folder, <span class="st">"decirc"</span>)
 <span class="kw"><a href="../reference/decirc_phenorice.html">decirc_phenorice</a></span>(in_folder, out_folder)</code></pre></div>
-<p>Let’see what we get inside the decircularized data:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">insos_decirc &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(
-  <span class="st">"/home/lb/my_data/prasia/mosaics/ordered/subsets/Nueva_Ecija/decirc/sos_decirc.RData"</span>
-))
-<span class="kw">summary</span>(insos_decirc[[<span class="dv">1</span>:<span class="dv">8</span>]])</code></pre></div>
-<pre><code>##         sos_2003_s1_d sos_2003_s2_d sos_2003_s3_d sos_2003_s4_d
-## Min.              972          1020          1113          1201
-## 1st Qu.           988          1092          1225          1281
-## Median            996          1100          1257          1289
-## 3rd Qu.          1004          1108          1265          1305
-## Max.             1028          1177          1273          1369
-## NA's           229893        214581        228646        216442
-##         sos_2004_s1_d sos_2004_s2_d sos_2004_s3_d sos_2004_s4_d
-## Min.             1329          1385          1473          1566
-## 1st Qu.          1337          1465          1590          1646
-## Median           1369          1473          1614          1654
-## 3rd Qu.          1377          1478          1630          1654
-## Max.             1401          1534          1638          1734
-## NA's           229499        215729        227891        219311</code></pre>
+<p>Let’s mask again the de-circularized data on Nueva Ecija:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc"</span>
+r &lt;-<span class="st"> </span><span class="kw">read_rast</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.tif"</span>)
+subset_name &lt;-<span class="st"> "Nueva_Ecija"</span>
+in_country  &lt;-<span class="st"> "PHL"</span>
+boundmask   &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/get_boundaries">get_boundaries</a></span>(in_country, <span class="dt">level =</span> <span class="dv">1</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(NAME_<span class="dv">1</span> <span class="op">==</span><span class="st"> "Nueva Ecija"</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>()<span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw">get_proj4string</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig/cumevi_ordered.tif"</span>))
+
+
+<span class="co"># insos_decirc_NE &lt;- mask_rast(r, boundmask, crop = T,</span>
+<span class="co">#                              out_filename = file.path(in_folder,"subsets/NE/insos_NE.tif"), </span>
+<span class="co">#                              parallel = T)</span>
+insos_decirc_NE &lt;-<span class="st"> </span><span class="kw">read_rast</span>(<span class="kw">file.path</span>(in_folder,<span class="st">"subsets/NE/insos_NE.tif"</span>))
+<span class="kw">NAvalue</span>(insos_decirc_NE) &lt;-<span class="st"> </span><span class="dv">0</span>
+<span class="kw">summary</span>(insos_decirc_NE[[<span class="dv">1</span><span class="op">:</span><span class="dv">8</span>]])</code></pre></div>
+<pre><code>##         insos_NE.1 insos_NE.2 insos_NE.3 insos_NE.4 insos_NE.5 insos_NE.6
+## Min.           972       1020       1113       1201       1329       1385
+## 1st Qu.        996       1092       1225       1281       1337       1465
+## Median        1004       1100       1257       1289       1361       1473
+## 3rd Qu.       1010       1108       1265       1305       1377       1478
+## Max.          1020       1177       1273       1369       1401       1542
+## NA's        229891     214558     228692     216181     229520     215718
+##         insos_NE.7 insos_NE.8
+## Min.          1478       1566
+## 1st Qu.       1590       1646
+## Median        1614       1654
+## 3rd Qu.       1630       1654
+## Max.          1638       1734
+## NA's        227834     219532</code></pre>
 <p>You see that the “dates” are more or less monotonically increasing on the different seasons, though there are some overlaps. Analyzing the seasons separately would therefore be difficult. So, it’s better to put everyting in a single array (note that here I can do this brute force, but for larger areas it will be impossible):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># get the data for three years as an array that contains all detected sos dates in Nueva </span>
 <span class="co"># Ecijia as a single array</span>
-
-
-sos =<span class="st"> </span>(<span class="kw">as.Date</span>(<span class="st">"2000-01-01"</span>) +<span class="st"> </span>raster::<span class="kw">getValues</span>(insos_decirc[[<span class="dv">1</span>:<span class="dv">24</span>]]))
-sos =<span class="st"> </span>sos[!<span class="kw">is.na</span>(sos)]
-alldata =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">sos =</span> sos) %&gt;%<span class="st"> </span>
+insos_decirc &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(
+  <span class="st">"/home/lb/my_data/prasia/Data/subsets/Nueva_Ecija/param_series/decirc/sos.RData"</span>
+))
+sos =<span class="st"> </span>(<span class="kw">as.Date</span>(<span class="st">"2000-01-01"</span>) <span class="op">+</span><span class="st"> </span>raster<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/getValues">getValues</a></span>(insos_decirc[[<span class="dv">1</span><span class="op">:</span><span class="dv">24</span>]]))
+sos =<span class="st"> </span>sos[<span class="op">!</span><span class="kw">is.na</span>(sos)]
+alldata =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">sos =</span> sos) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">as_tibble</span>()
 
-<span class="kw">ggplot</span>(alldata, <span class="kw">aes</span>(<span class="dt">x =</span> sos)) +<span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="dv">8</span>) +<span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks =</span> <span class="st">"1 year"</span>, <span class="dt">limits =</span> <span class="kw">as.Date</span>(<span class="kw">c</span>(<span class="st">"2002-06-01"</span>, <span class="st">"2008-12-01"</span>))) +
-<span class="st">  </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">vjust =</span> <span class="dv">1</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) </code></pre></div>
+<span class="kw">ggplot</span>(alldata, <span class="kw">aes</span>(<span class="dt">x =</span> sos)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="dv">8</span>) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks =</span> <span class="st">"1 year"</span>, <span class="dt">limits =</span> <span class="kw">as.Date</span>(<span class="kw">c</span>(<span class="st">"2002-06-01"</span>, <span class="st">"2008-12-01"</span>))) <span class="op">+</span>
+<span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">vjust =</span> <span class="dv">1</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) </code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-7-1.png" width="672"></p>
 <p>This clearly depicts the double seasonality of Nueva Ecjia. It also evidences the rather narrower range of detected sos in winter.</p>
 <p>However, what I wanted to point out is that “decircularizing” the DOYS allows to analyze them more easily, becaus we can “treat” the detected sos as a whole time series of events, without having to think about to which “season” PhenoRice assigned the sos.</p>
@@ -219,80 +266,81 @@ alldata =<span class="st"> </span><span class="kw">data.frame</span>(<span class
 <h3 class="hasAnchor">
 <a href="#aggregate-to-lower-resolution" class="anchor"></a>Aggregate to lower resolution</h3>
 <p>To be able to work with a manageable number of “pixels” over large areas, and also to create large-scale maps, it could be worthy to aggregate the results over regular grids:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_fishnet &lt;-<span class="st"> </span>sprawl::<span class="kw">create_fishnet</span>(insos_decirc, <span class="dt">pix_for_cell =</span> <span class="dv">21</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_fishnet &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/create_fishnet">create_fishnet</a></span>(insos_decirc, <span class="dt">pix_for_cell =</span> <span class="dv">21</span>, 
+                                     <span class="dt">shape =</span> <span class="st">"hex"</span>)
 <span class="kw">plot_rast</span>(insos_decirc[[<span class="dv">2</span>]], <span class="dt">in_poly =</span> in_fishnet)</code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-8-1.png" width="672"></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">insos_decirc_5k &lt;-<span class="st"> </span><span class="kw">extract_rast</span>(insos_decirc, 
                                 in_fishnet, 
-                                <span class="dt">addgeom =</span> <span class="ot">FALSE</span>, 
+                                <span class="dt">join_geom =</span> <span class="ot">FALSE</span>, 
                                 <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
 
-insos5kdata &lt;-<span class="st"> </span>insos_decirc_5k$alldata %&gt;%<span class="st"> </span>
-<span class="st">  </span>dplyr::<span class="kw">filter</span>(!<span class="kw">is.na</span>(value))  %&gt;%<span class="st"> </span>
-<span class="st">  </span>dplyr::<span class="kw">mutate</span>(<span class="dt">sosdate =</span> <span class="kw">as.Date</span>(<span class="st">"2000-01-01"</span>) +<span class="st"> </span>value, 
-                <span class="dt">fc =</span> N/N_PIX, 
-                <span class="dt">area =</span> <span class="fl">2146.58</span>*fc) %&gt;%<span class="st"> </span>
-<span class="st">  </span>dplyr::<span class="kw">arrange</span>(cell_id, band_n)
+insos5kdata &lt;-<span class="st"> </span>insos_decirc_5k<span class="op">$</span>alldata <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="op">!</span><span class="kw">is.na</span>(value))  <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="dt">sosdate =</span> <span class="kw">as.Date</span>(<span class="st">"2000-01-01"</span>) <span class="op">+</span><span class="st"> </span>value, 
+                <span class="dt">fc =</span> N<span class="op">/</span>n_pix, 
+                <span class="dt">area =</span> <span class="fl">2146.58</span><span class="op">*</span>fc) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span>(id_feat, band_n)
 insos5kdata</code></pre></div>
-<pre><code>## # A tibble: 427,492 x 10
-##    mdxtnq band_n       date N_PIX     N value cell_id    sosdate
-##     &lt;int&gt;  &lt;int&gt;     &lt;date&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;   &lt;int&gt;     &lt;date&gt;
-##  1     13     35 2011-01-01   420     5  4107      13 2011-03-31
-##  2     13     35 2011-01-01   420     6  4107      13 2011-03-31
-##  3     14      2 2003-01-01   420    20  1076      14 2002-12-12
-##  4     14      3 2003-01-01   420    13  1201      14 2003-04-16
-##  5     14      3 2003-01-01   420    35  1201      14 2003-04-16
-##  6     14      4 2003-01-01   420    20  1321      14 2003-08-14
-##  7     14      4 2003-01-01   420    41  1313      14 2003-08-06
-##  8     14      4 2003-01-01   420   125  1321      14 2003-08-14
-##  9     14      4 2003-01-01   420   146  1361      14 2003-09-23
-## 10     14      6 2004-01-01   420   124  1465      14 2004-01-05
-## # ... with 427,482 more rows, and 2 more variables: fc &lt;dbl&gt;, area &lt;dbl&gt;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(insos5kdata$fc)</code></pre></div>
+<pre><code>## # A tibble: 499,614 x 9
+##    id_feat band_n       date n_pix     N value    sosdate         fc
+##      &lt;int&gt;  &lt;int&gt;     &lt;date&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;     &lt;date&gt;      &lt;dbl&gt;
+##  1       1      1 2003-01-01     1     1  1036 2002-11-02 1.00000000
+##  2       1      3 2003-01-01    11     1  1193 2003-04-08 0.09090909
+##  3       1      3 2003-01-01    11     2  1185 2003-03-31 0.18181818
+##  4       1      3 2003-01-01    11     3  1201 2003-04-16 0.27272727
+##  5       1      3 2003-01-01    11     4  1201 2003-04-16 0.36363636
+##  6       1      3 2003-01-01    11     5  1201 2003-04-16 0.45454545
+##  7       1      3 2003-01-01    11     6  1233 2003-05-18 0.54545455
+##  8       1      3 2003-01-01    11     7  1185 2003-03-31 0.63636364
+##  9       1      3 2003-01-01    11     8  1177 2003-03-23 0.72727273
+## 10       1      3 2003-01-01    11     9  1145 2003-02-19 0.81818182
+## # ... with 499,604 more rows, and 1 more variables: area &lt;dbl&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(insos5kdata<span class="op">$</span>fc)</code></pre></div>
 <pre><code>##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-## 0.002268 0.256236 0.509524 0.505064 0.754762 1.000000</code></pre>
+## 0.002262 0.261261 0.509960 0.512619 0.763441 1.000000</code></pre>
 <p>here we get, for each 5km cell, the average sos date estimated in the different years and seasons, the number of pixels detected within the cell from which we can compute the detected area (so that we can filter-out 5k cells where only few pixels where rice - in this case you can see that half of the 5k cells got a 50 % rice “detection”).</p>
 <p>Again, having de-circulated the doys allows to treat all data as a continuous series. Here I plot the frequency histograms derived by considering all Nueva Ecjia cells with fc above 0.5:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">insos5kdata_filt &lt;-<span class="st"> </span>insos5kdata %&gt;%<span class="st"> </span>
-<span class="st">  </span>dplyr::<span class="kw">filter</span>(fc &gt;=<span class="st"> </span><span class="fl">0.5</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">insos5kdata_filt &lt;-<span class="st"> </span>insos5kdata <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(fc <span class="op">&gt;=</span><span class="st"> </span><span class="fl">0.5</span>)
 insos5kdata_filt</code></pre></div>
-<pre><code>## # A tibble: 217,830 x 10
-##    mdxtnq band_n       date N_PIX     N value cell_id    sosdate        fc
-##     &lt;int&gt;  &lt;int&gt;     &lt;date&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;   &lt;int&gt;     &lt;date&gt;     &lt;dbl&gt;
-##  1     15      2 2003-01-01   420   214  1084      15 2002-12-20 0.5095238
-##  2     15      2 2003-01-01   420   215  1076      15 2002-12-12 0.5119048
-##  3     15      2 2003-01-01   420   216  1084      15 2002-12-20 0.5142857
-##  4     15      2 2003-01-01   420   282  1084      15 2002-12-20 0.6714286
-##  5     15      6 2004-01-01   420   214  1449      15 2003-12-20 0.5095238
-##  6     15      6 2004-01-01   420   218  1457      15 2003-12-28 0.5190476
-##  7     15      6 2004-01-01   420   236  1457      15 2003-12-28 0.5619048
-##  8     15      6 2004-01-01   420   238  1457      15 2003-12-28 0.5666667
-##  9     15      6 2004-01-01   420   258  1457      15 2003-12-28 0.6142857
-## 10     15      6 2004-01-01   420   261  1441      15 2003-12-12 0.6214286
-## # ... with 217,820 more rows, and 1 more variables: area &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 258,825 x 9
+##    id_feat band_n       date n_pix     N value    sosdate        fc
+##      &lt;int&gt;  &lt;int&gt;     &lt;date&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;     &lt;date&gt;     &lt;dbl&gt;
+##  1       1      1 2003-01-01     1     1  1036 2002-11-02 1.0000000
+##  2       1      3 2003-01-01    11     6  1233 2003-05-18 0.5454545
+##  3       1      3 2003-01-01    11     7  1185 2003-03-31 0.6363636
+##  4       1      3 2003-01-01    11     8  1177 2003-03-23 0.7272727
+##  5       1      3 2003-01-01    11     9  1145 2003-02-19 0.8181818
+##  6       1      3 2003-01-01    11    10  1129 2003-02-03 0.9090909
+##  7       1      3 2003-01-01    11    11  1161 2003-03-07 1.0000000
+##  8       1      4 2003-01-01     2     1  1273 2003-06-27 0.5000000
+##  9       1      4 2003-01-01     2     2  1281 2003-07-05 1.0000000
+## 10       1      7 2004-01-01     8     4  1582 2004-05-01 0.5000000
+## # ... with 258,815 more rows, and 1 more variables: area &lt;dbl&gt;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot the distibutioni of detected dates in cells above 50%</span>
 
-<span class="kw">ggplot</span>(insos5kdata_filt, <span class="kw">aes</span>(<span class="dt">x =</span> sosdate)) +<span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="dv">8</span>) +<span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks =</span> <span class="st">"1 year"</span>, <span class="dt">limits =</span> <span class="kw">as.Date</span>(<span class="kw">c</span>(<span class="st">"2003-06-01"</span>, <span class="st">"2016-12-01"</span>))) +
-<span class="st">  </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">vjust =</span> <span class="dv">1</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) </code></pre></div>
+<span class="kw">ggplot</span>(insos5kdata_filt, <span class="kw">aes</span>(<span class="dt">x =</span> sosdate)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="dv">8</span>) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks =</span> <span class="st">"1 year"</span>, <span class="dt">limits =</span> <span class="kw">as.Date</span>(<span class="kw">c</span>(<span class="st">"2003-06-01"</span>, <span class="st">"2016-12-01"</span>))) <span class="op">+</span>
+<span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">vjust =</span> <span class="dv">1</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) </code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-9-1.png" width="672"></p>
 <p>To analyze interannual variations, we will have however to “split” the series somewhere, but now we can decide where. Here I try with october.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">years &lt;-<span class="st"> </span><span class="dv">2002</span>:<span class="dv">2016</span>
-season &lt;-<span class="st"> </span><span class="kw">cut</span>((insos5kdata_filt$sosdate), 
-  <span class="dt">breaks =</span> <span class="kw">as.Date</span>(<span class="kw">paste</span>(years,<span class="st">"-01-10"</span>,<span class="dt">sep=</span><span class="st">""</span>)),
-  <span class="dt">labels =</span> <span class="kw">paste</span>(years[-<span class="kw">length</span>(years)],years[-<span class="kw">length</span>(years)]+<span class="dv">1</span>,<span class="dt">sep=</span><span class="st">"/"</span>))
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">years &lt;-<span class="st"> </span><span class="dv">2002</span><span class="op">:</span><span class="dv">2016</span>
+season &lt;-<span class="st"> </span><span class="kw">cut</span>((insos5kdata_filt<span class="op">$</span>sosdate), 
+              <span class="dt">breaks =</span> <span class="kw">as.Date</span>(<span class="kw">paste</span>(years,<span class="st">"-01-10"</span>,<span class="dt">sep=</span><span class="st">""</span>)),
+              <span class="dt">labels =</span> <span class="kw">paste</span>(years[<span class="op">-</span><span class="kw">length</span>(years)],years[<span class="op">-</span><span class="kw">length</span>(years)]<span class="op">+</span><span class="dv">1</span>,<span class="dt">sep=</span><span class="st">"/"</span>))
 
-insos5kdata_filt &lt;-<span class="st"> </span>insos5kdata_filt %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">date_fake =</span> <span class="kw">doytodate</span>(<span class="kw">datetodoy</span>(sosdate), <span class="dv">2003</span>)) %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">season =</span> season) %&gt;%<span class="st"> </span>
-<span class="st">  </span>dplyr::<span class="kw">filter</span>(!season %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">"2002/2003"</span>, <span class="st">"2001/2002"</span>))
+insos5kdata_filt &lt;-<span class="st"> </span>insos5kdata_filt <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">date_fake =</span> <span class="kw">doytodate</span>(<span class="kw">datetodoy</span>(sosdate), <span class="dv">2003</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">season =</span> season) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="op">!</span>season <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">"2002/2003"</span>, <span class="st">"2001/2002"</span>))
 
-<span class="kw">ggplot</span>(insos5kdata_filt, <span class="kw">aes</span>(<span class="dt">x =</span> date_fake, <span class="dt">y =</span> season, <span class="dt">fill =</span> season)) +<span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_joy</span>(<span class="dt">scale =</span> <span class="fl">2.0</span>) +<span class="st"> </span>
+<span class="kw">ggplot</span>(insos5kdata_filt, <span class="kw">aes</span>(<span class="dt">x =</span> date_fake, <span class="dt">y =</span> season, <span class="dt">fill =</span> season)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_joy</span>(<span class="dt">scale =</span> <span class="fl">2.0</span>) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">limits =</span> <span class="kw">as.Date</span>(<span class="kw">c</span>(<span class="st">"2002-11-01"</span>, <span class="st">"2003-11-01"</span>)), 
-               <span class="dt">date_labels =</span> <span class="st">"%b %d"</span>) +<span class="st"> </span><span class="kw">theme_joy</span>() +<span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_fill_cyclical</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">"gray80"</span>, <span class="st">"gray50"</span>)) +<span class="st"> </span>
+               <span class="dt">date_labels =</span> <span class="st">"%b %d"</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme_joy</span>() <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">scale_fill_cyclical</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">"gray80"</span>, <span class="st">"gray50"</span>)) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">"Nueva Ecija - Interannual variation of detected SOS"</span>)</code></pre></div>
 <p><img src="processing_summary_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>
 <p>(This is just a first try: I probably have some error in the grouping, but to give you an idea)</p>

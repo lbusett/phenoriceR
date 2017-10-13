@@ -1,0 +1,189 @@
+---
+title: "Phenorice Processing - Iran Test Area"
+author: "Lorenzo Busetto"
+date: "2 October 2017"
+output:
+  pdf_document: 
+    number_sections: yes
+    toc: yes
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(sprawl)
+library(ggspatial)
+library(ggplot2)
+library(raster)
+in_folder  <- "/home/lb/nr_working/shared/PhenoRice/Processing/Iran/Outputs/AOI_3"
+out_folder <- "/home/lb/nr_working/shared/PhenoRice/Processing/Iran/Outputs/AOI_3/tiffs"
+start_year <- 2010
+end_year   <- 2016
+
+```
+
+# Introduction
+
+This document shortly describes the results of a preliminary analysis conducted
+over the Sari study area using the PhenoRice algorithm to map rice cultivate areas 
+and analyze the spatial and temporal variability of parameters related to agro-practices
+such as crop intensity and sowing and harvesting dates, starting from time series of MODIS 250m resolution imagery
+
+# Method
+
+The analysis was conducted starting from MODIS time series (Products MOD13Q1 and
+MOD11A2) for the period 2010 - 2016. data was preprocessed using the `MODIStp`
+[`MODIStp`](https://cran.rstudio.com/web/packages/MODIStsp/index.html) "R" package
+and successively analyzed using the [PhenoRice algoritm](http://www.sciencedirect.com/science/article/pii/S0034425717301311). 
+
+Results were then postprocessed and plotted using dedicated "R" scripts.
+
+\newpage
+
+# Results
+
+Results are here summarized as multi-year maps (original outputs in TIFF format
+can be made available if needed).
+
+## Rice crop intensity maps
+
+The following maps show the number of rice seasons detected by PhenoRice over the 
+study area located nearby Sari, in the analyzed period.
+The maps show that only one rice season is generally identified, though a double
+season is detected in some areas in the central part of the map.
+
+
+```{r intensity_maps, echo=FALSE, fig.height=8, fig.width=8, message=FALSE, warning=FALSE, paged.print=FALSE}
+nseas <- read_rast(list.files(file.path(out_folder, "param_series/"),
+                               full.names = T)[5])
+band_names <- paste(seq(2010, 2016, 1))
+p <- plot_rast_gg(nseas, na.color = "transparent",
+             band_names = band_names,
+             palette_type = "categorical", 
+             palette_name = "Set2",
+             leg_type = "discrete",
+             zoomin = -2,
+             basemap = "osmgrayscale",
+             scalebar_txt_dist = 0.06,
+             maxpixels = 500000000, 
+             na.value = 0, 
+             no_axis = T, 
+             title = "Number of detected rice seasons")
+p
+```
+
+\newpage
+
+## Sowing dates maps
+
+The following maps show the estimated sowing dates in the analyzed period for the
+main rice season. The maps clearly highlight a strong variability in rice sowing dates, 
+between the western (Sowing around the middle of April) and eastern parts 
+(Sowing around end of May - beginning of June) of the study area. 
+
+
+```{r sowing_maps1, echo=FALSE, fig.height=8, fig.width=8, message=FALSE, warning=FALSE, paged.print=FALSE}
+sowing <- read_rast(list.files(file.path(out_folder, "param_series/"),
+                               full.names = T)[7])
+NAvalue(sowing) <- -32768
+sowing_yearly <- list()
+# for (yy in seq_along(start_year:end_year)) {
+#   sowing_yearly[[yy]] <- sum(sowing[[4*(yy - 1) + 1:4]])
+# }
+
+sow_s3     <- sowing[[3 + 4*(0:6)]]
+band_names <- paste0("Year ",start_year:end_year)
+NAvalue(sow_s3) <- -32768
+leg_breaks <- c(100,115,130, 145, 160, 175, 190)
+leg_labels <- doytodate(leg_breaks, 2010)
+leg_labels <- format(leg_labels, "%d/%m")
+plot_rast_gg(sow_s3, na.color = "transparent",
+             band_names = band_names,
+             palette_type = "diverging",
+             leg_labels = leg_labels,
+             leg_breaks = leg_breaks,
+             zlims = c(100, 190),
+             outliers_style = "to_minmax",
+             zoomin = -2 ,
+             basemap = "osmgrayscale",
+             na.value = -32768,
+             scalebar_txt_dist = 0.06,
+             maxpixels = 500000000, 
+             no_axis = T,
+             title = "Sowing Dates - Main Season")
+```
+
+\newpage
+
+The following maps show the estimated sowing dates in the analyzed period for the
+areas for which a second rice season was identified. The second detected rice season, 
+though limited, seems to have expanded in recent years. Sowing dates are estimated
+to be generally between the beginning and the middle of August. 
+
+```{r sowing_maps2, echo=FALSE, fig.height=8, fig.width=8, message=FALSE, warning=FALSE, paged.print=FALSE}
+sow_s4     <- sowing[[4 + 4*(0:6)]]
+band_names <- paste0("Year ",start_year:end_year)
+NAvalue(sow_s4) <- -32768
+leg_breaks <- c(210,220, 230, 240)
+leg_labels <- doytodate(leg_breaks, 2010)
+leg_labels <- format(leg_labels, "%d/%m")
+plot_rast_gg(sow_s4, na.color = "transparent",
+             band_names = band_names,
+             palette_type = "diverging",
+             # palette_name = "RdYlBu",
+             leg_labels = leg_labels,
+             leg_breaks = leg_breaks,
+             zlims = c(210, 240),
+             # zlims_type = "percs",
+             outliers_style = "to_minmax",
+             zoomin = -2 ,
+             basemap = "osmgrayscale",
+             na.value = -32768,
+             scalebar_txt_dist = 0.06,
+             maxpixels = 50000000000000, 
+             no_axis = T, 
+             title = "Sowing Dates - Secondary Season")
+```
+
+\newpage
+
+## Rice harvesting maps
+
+The following maps show the estimated harvesting dates in the analyzed period for the
+main rice season. The maps clearly highlight a strong variability in harvesting dates, 
+between the western (Harvesting around end of July) and eastern parts 
+(Harvesting around mid September) of the study area. 
+
+
+```{r harv_maps, echo=FALSE, fig.height=8, fig.width=8, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+harv <- read_rast(list.files(file.path(out_folder, "param_series/"),
+                               full.names = T)[4])
+NAvalue(harv) <- -32768
+harv_yearly <- list()
+# for (yy in seq_along(start_year:end_year)) {
+#   harv_yearly[[yy]] <- sum(harv[[4*(yy - 1) + 1:4]])
+# }
+
+harv_s3     <- harv[[3 + 4*(0:6)]]
+band_names <- paste0("Year ",start_year:end_year)
+NAvalue(harv_s3) <- -32768
+leg_breaks <- c(100,115,130, 145, 160, 175, 190) + 90
+leg_labels <- doytodate(leg_breaks, 2010)
+leg_labels <- format(leg_labels, "%d/%m")
+p <- plot_rast_gg(harv_s3, na.color = "transparent",
+             band_names = band_names,
+             palette_type = "diverging",
+             leg_labels = leg_labels,
+             leg_breaks = leg_breaks,
+             zlims = c(190, 280),
+             outliers_style = "to_minmax",
+             zoomin = -2 ,
+             basemap = "osmgrayscale",
+             na.value = -32768,
+             scalebar_txt_dist = 0.06,
+             maxpixels = 500000000, 
+             no_axis = T,
+             title = "Harvesting Dates - Main Season")
+p
+```
+

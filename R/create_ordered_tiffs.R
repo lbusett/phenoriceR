@@ -22,7 +22,8 @@
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom tools file_path_sans_ext
 #' @import foreach
-#'
+#' @importFrom magrittr %>%
+#' @importFrom sprawl read_rast
 create_ordered_tiffs <- function(mosaics_folder,
                                  patterns,
                                  out_folder) {
@@ -32,7 +33,7 @@ create_ordered_tiffs <- function(mosaics_folder,
     print(pattern)
     create_vrt_mosaics(mosaics_folder, pattern)
   }
-  vrts    <- list.files(mosaics_folder, pattern = ".vrt", full.names = T)
+  vrts    <- list.files(file.path(mosaics_folder, "vrts"), pattern = ".vrt", full.names = T)
   ncores  <- 4
   clust   <- parallel::makeCluster(ncores, outfile = " ")
   doSNOW::registerDoSNOW(clust)
@@ -43,15 +44,17 @@ create_ordered_tiffs <- function(mosaics_folder,
     .packages = c("gdalUtils", "tools"),
     .verbose  = TRUE
   ) %dopar% {
+    # browser()
+    # for (vrt_n in vrts){
 
     message("create_ordered_tiffs --> processing: ", basename(vrts[vrt_n]))
     parameter <- basename(tools::file_path_sans_ext(vrts[vrt_n]))
-    outfile <- file.path(outfold,
+    outfile <- file.path(out_folder,
                          paste0(basename(tools::file_path_sans_ext(vrts[vrt_n])), ".tif"))
     if (parameter %in% c("sos_ordered", "eos_ordered", "pos_ordered")) {
       ot <- "Int16"
     }
-    if (parameter %in% c("cumevi_ordered")) {
+    if (parameter %in% c("cumevi_ordered", "cumevi_vgt_ordered")) {
       ot <- "Int32"
     }
     if (parameter %in% c("totlgt_ordered", "veglgt_ordered", "nseas_ordered")) {
@@ -68,7 +71,29 @@ create_ordered_tiffs <- function(mosaics_folder,
                               overwrite = TRUE)
 
     return(paste0(outfile, " completed ! "))
+
+    parameter <- basename(outfile)
+    out_stack <- sprawl::read_rast(outfile)
+    in_var <- strsplit(parameter, "_")[[1]][1]
+    if (in_var != "nseas") {
+    names(out_stack) <- paste(in_var,
+                             paste(sort(rep(seq(start_year, end_year, 1), 4)),
+                                   c("s1","s2","s3","s4"), sep = "_"),
+                             sep = "_")
+    years   <- as.Date(paste(sort(rep(seq(start_year, end_year, 1), 4)),
+                             "-01-01", sep = ""))
+    } else {
+      names(out_stack) <- paste(in_var,
+                                paste(sort(rep(seq(start_year, end_year, 1), 1))
+                                      , sep = "_"),
+                                sep = "_")
+      years   <- as.Date(paste(sort(rep(seq(start_year, end_year, 1), 1)),
+                               "-01-01", sep = ""))
+    }
+    out_stack <- raster::setZ(out_stack, years)
+    save(out_stack, file = paste0(tools::file_path_sans_ext(outfile), ".RData"))
   }
+
   parallel::stopCluster(clust)
 }
 

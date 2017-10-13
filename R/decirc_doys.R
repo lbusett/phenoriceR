@@ -22,7 +22,7 @@
 #' @importFrom gdalUtils gdalbuildvrt gdal_translate
 #' @importFrom raster stack setZ calc
 
-decirc_phenorice <- function(in_folder, out_folder){
+decirc_phenorice <- function(in_folder, out_folder, start_year, end_year){
 
   dir.create(out_folder, recursive = TRUE, showWarnings = FALSE)
   tmp_folder <- file.path(out_folder, "tmp")
@@ -32,17 +32,17 @@ decirc_phenorice <- function(in_folder, out_folder){
   #   on the full mosaics, so create single bands and then aggregate later
   #   in a multiband
 
-  for (in_var in c("sos", "eos", "pos")) {
-    in_file <- list.files(in_folder, pattern = glob2rx(paste0(in_var, "_*.tif$")),
+  for (in_var in c("sos_ordered", "eos_ordered", "pos_ordered")) {
+    in_file <- list.files(in_folder, pattern = glob2rx(paste0(in_var, ".tif$")),
                           full.names = TRUE)
 
     # out_RData <- file.path(out_folder, paste0(in_var, "_decirc.RData"))
-    in_rast        <- raster::stack(in_file)
+    in_rast        <- read_rast(in_file)
     names(in_rast) <- paste(in_var,
-                            paste(sort(rep(seq(2003, 2016, 1), 4)),
+                            paste(sort(rep(seq(start_year, end_year, 1), 4)),
                                   c("s1","s2","s3","s4"), sep = "_"),
                             sep = "_")
-    years   <- as.Date(paste(sort(rep(seq(2003, 2016, 1), 4)),"-01-01", sep = ""))
+    years   <- as.Date(paste(sort(rep(seq(start_year, end_year, 1), 4)),"-01-01", sep = ""))
     in_rast <- raster::setZ(in_rast, years)
     for (yy in seq_along(years)) {
       message(in_var, "band - ", yy)
@@ -84,9 +84,9 @@ decirc_phenorice <- function(in_folder, out_folder){
     #   ____________________________________________________________________________
     #   create also an RData with associated band names and "times"             ####
 
-    out_rast        <- raster::stack(out_file)
+    out_rast        <- read_rast(out_file)
     names(out_rast) <- paste(in_var,
-                             paste(sort(rep(seq(2003, 2016, 1), 4)),
+                             paste(sort(rep(seq(start_year, end_year, 1), 4)),
                                    c("s1_d","s2_d","s3_d","s4_d"), sep = "_"),
                              sep = "_")
     out_rast        <- raster::setZ(out_rast, years)
@@ -94,5 +94,5 @@ decirc_phenorice <- function(in_folder, out_folder){
   }
 }
 
-in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/"
-out_folder <- file.path(in_folder, "decirc")
+# in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/"
+# out_folder <- file.path(in_folder, "decirc")

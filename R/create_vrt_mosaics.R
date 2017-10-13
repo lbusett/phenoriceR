@@ -22,9 +22,10 @@ create_vrt_mosaics <- function(mosaics_folder, pattern) {
   names         <- tibble::tibble(fullname = in_files,
                           shortname = basename(tools::file_path_sans_ext(in_files)))
   split_names   <- stringr::str_split_fixed(names$shortname, "_", 3)
-  names         <- cbind(names, split_names, or_order = seq(1:length(names$fullname))) %>%
-    `colnames   <-`(c("fullname", "basename", "var", "season", "year", "order")) %>%
-    dplyr::arrange(year, season)
+  names         <- cbind(names, split_names,
+                         or_order = seq(1:length(names$fullname)))
+  names(names)  <- c("fullname", "basename", "var", "season", "year", "order")
+  names <-  dplyr::arrange(names, year, season)
   ordered_files <- names$fullname
 
   vrt_file      <- file.path(mosaics_folder, "vrts", paste0(pattern, "_ordered.vrt"))

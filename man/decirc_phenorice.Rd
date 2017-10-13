@@ -4,7 +4,7 @@
 \alias{decirc_phenorice}
 \title{convert PhenoRice "dates" to julian date (diff to 2000-01-01)}
 \usage{
-decirc_phenorice(in_folder, out_folder)
+decirc_phenorice(in_folder, out_folder, start_year, end_year)
 }
 \arguments{
 \item{in_folder}{input folder containing the "ordered" multiband tiffs resulting from
