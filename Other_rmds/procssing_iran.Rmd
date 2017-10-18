@@ -58,7 +58,7 @@ nseas <- read_rast(list.files(file.path(out_folder, "param_series/"),
 band_names <- paste(seq(2010, 2016, 1))
 p <- plot_rast_gg(nseas, na.color = "transparent",
              band_names = band_names,
-             palette_type = "categorical", 
+             rast_type = "categorical",
              palette_name = "Set2",
              leg_type = "discrete",
              zoomin = -2,
@@ -66,7 +66,8 @@ p <- plot_rast_gg(nseas, na.color = "transparent",
              scalebar_txt_dist = 0.06,
              maxpixels = 500000000, 
              na.value = 0, 
-             no_axis = T, 
+             show_axis = F, 
+             facet_rows = 4,
              title = "Number of detected rice seasons")
 p
 ```
@@ -98,9 +99,9 @@ leg_labels <- doytodate(leg_breaks, 2010)
 leg_labels <- format(leg_labels, "%d/%m")
 plot_rast_gg(sow_s3, na.color = "transparent",
              band_names = band_names,
-             palette_type = "diverging",
              leg_labels = leg_labels,
              leg_breaks = leg_breaks,
+             palette_name = "RdYlGn",
              zlims = c(100, 190),
              outliers_style = "to_minmax",
              zoomin = -2 ,
@@ -108,7 +109,8 @@ plot_rast_gg(sow_s3, na.color = "transparent",
              na.value = -32768,
              scalebar_txt_dist = 0.06,
              maxpixels = 500000000, 
-             no_axis = T,
+             show_axis = F,
+             facet_rows = 4,
              title = "Sowing Dates - Main Season")
 ```
 
@@ -128,8 +130,8 @@ leg_labels <- doytodate(leg_breaks, 2010)
 leg_labels <- format(leg_labels, "%d/%m")
 plot_rast_gg(sow_s4, na.color = "transparent",
              band_names = band_names,
-             palette_type = "diverging",
-             # palette_name = "RdYlBu",
+             # palette_type = "diverging",
+             palette_name = "RdYlGn",
              leg_labels = leg_labels,
              leg_breaks = leg_breaks,
              zlims = c(210, 240),
@@ -140,7 +142,8 @@ plot_rast_gg(sow_s4, na.color = "transparent",
              na.value = -32768,
              scalebar_txt_dist = 0.06,
              maxpixels = 50000000000000, 
-             no_axis = T, 
+             show_axis = F,  
+             facet_rows = 4,
              title = "Sowing Dates - Secondary Season")
 ```
 
@@ -172,7 +175,7 @@ leg_labels <- doytodate(leg_breaks, 2010)
 leg_labels <- format(leg_labels, "%d/%m")
 p <- plot_rast_gg(harv_s3, na.color = "transparent",
              band_names = band_names,
-             palette_type = "diverging",
+             palette_name = "RdYlGn",
              leg_labels = leg_labels,
              leg_breaks = leg_breaks,
              zlims = c(190, 280),
@@ -182,7 +185,8 @@ p <- plot_rast_gg(harv_s3, na.color = "transparent",
              na.value = -32768,
              scalebar_txt_dist = 0.06,
              maxpixels = 500000000, 
-             no_axis = T,
+             show_axis = F, 
+             facet_rows = 4,
              title = "Harvesting Dates - Main Season")
 p
 ```
