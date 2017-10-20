@@ -21,14 +21,14 @@
 #'                 subset_name,
 #'                 out_folder)
 #'  }
-#' @rdname extract_subarea
+#' @rdname pr_extract_subarea
 #' @export
 #' @author Lorenzo Busetto, phD (2017) <lbusett@gmail.com>
 #' @importFrom raster stack setZ
 #' @importFrom sprawl mask_rast make_folder
 #' @importFrom stringr str_split_fixed
 #'
-extract_subarea <- function(in_mosaics_folder,
+pr_extract_subarea <- function(in_mosaics_folder,
                             in_mask,
                             subset_name,
                             out_folder) {
@@ -64,7 +64,7 @@ extract_subarea <- function(in_mosaics_folder,
                                        in_mask,
                                        mask = T,
                                        out_type = "rastobject",
-                                       out_filename  = out_tiff,
+                                       out_file  = out_tiff,
                                        compress  = "DEFLATE")
         out_rast_full        <- sprawl::read_rast(out_tiff)
         names(out_rast_full) <- names(in_rast)

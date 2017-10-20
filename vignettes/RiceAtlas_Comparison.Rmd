@@ -1,13 +1,13 @@
----
+c("plant_st1   105   181   258       4323")
 title: "RiceAtlas Comparison"
 output:
-  html_document:
-    highlight: pygments
-    theme: journal
-    toc: yes
-    toc_depth: 2
+html_document:
+highlight: pygments
+theme: journal
+toc: yes
+toc_depth: 2
 editor_options: 
-  chunk_output_type: console
+chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -34,9 +34,9 @@ mapviewOptions(basemaps = c("Esri.WorldImagery", "OpenStreetMap.DE"),
 Here I am going to document the passages required to compare PhenoRice results
 with RiceAtlas
 
-## Preprocessing
+# Preprocessing
 
-### Select an area
+## Select an area
 
 For simlpicity, let's work on a selected area (in this case, the Philippines) 
 (for Bhogendra: I created a folder structure containing all required input 
@@ -71,6 +71,8 @@ extract_subarea(mosaic_folder,
 
 ```
 
+## Visualize data
+
 Extract and visualize rice atlas data for an area and "variable -  in this case
 "Peak" planting date. 
 
@@ -89,7 +91,7 @@ completely different values. Let's see a histogram:
 p <- ggplot(peak_plant_s1, aes(x = doytodate(Peak, 2005))) + 
   geom_histogram(binwidth = 15, fill = "darkgrey", color = "black") +
   scale_x_date(limits = doytodate(c(0,365), 2005) ,
-              date_labels = "%b") + 
+               date_labels = "%b") + 
   theme_bw() 
 p
 
@@ -118,8 +120,97 @@ inconsistencies__. For example, in `rice_calendar`, South Leyte polygon has
 correct data, while in `rice_production_v1` they are wrong. However, though 
 in general the other polygons have similar values, they are not identical. 
 
-Fianlly, another problem is that, as in original PhenoRice outputs, __the DOYs are 
+Finally, another problem is that, as in original PhenoRice outputs, __the DOYs are 
 not "decircularized"__. This makes things difficult because area with the same 
 calendar can have for example "peak date" for planting equal to 360 or 10. 
 I will have to think of a way to solve this problem, if we wish to compare 
 PhenoRice with RiceAtlas. 
+
+### Update after Bhogendra reprocessing of riceAtlas data
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
+in_txt <- "/home/lb/my_data/prasia/various/NormalizedDB_Asia_new.txt"
+in_riceatlas_shp = "/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp"
+riceatlas_phl <- read_riceatlas(in_txt, in_riceatlas_shp, "PHL")
+peak_plant_s1 <- subset(riceatlas_phl, Pheno_stage == "plant_st1")
+plot_vect(peak_plant_s1, fill_var = "Peak", palette_name = "RdYlGn")
+```
+
+``` {r}
+
+riceatlas_phl %>% 
+  select(Sub_region, N_seasons, Season, Pheno_stage, Start, Peak, End)
+
+```
+Problem is evidently related to not accounting for circular nature of DOY. 
+
+### Further reshaping of riceatlas data
+
+Reshape a bit the dataset: 
+
+```{r reshape_data, echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+# Reshape a bit the dataset
+in_atlas <- read.csv2(in_txt) %>% 
+  # split columns
+  tidyr::separate(Pheno_stage, c("Stage", "season"), "_st") %>% 
+  # remove empty rows
+  dplyr::filter((Start != 0 & Peak != 0)) %>% 
+  # create unique name
+  dplyr::mutate(reg_name = paste(ISO, Region, Sub_region)) %>% 
+  dplyr::mutate(reg_name = stringr::str_replace(reg_name, "NA", "")) %>% 
+  # Rename and reorder
+  dplyr::select(Objectid, ISO, reg_name, N_seasons, season, 
+                Stage, Start, Peak, End, Total_area, Seasonal_area, 
+                Seasonal_production, Season, Country, Region, Sub_region) %>% 
+  dplyr::rename(cty = ISO, N_seas = N_seasons, Seas_name = Season, Season = season,
+                Seas_area = Seasonal_area , Seas_prod = Seasonal_production, 
+                Tot_area = Total_area) %>% 
+  tibble::as_tibble()
+names(in_atlas)[1] = "OBJECTID"
+in_atlas
+```
+
+Now let's compute the differences in the Start/Peak/End columns and check their 
+distribution: 
+
+```{r}
+
+in_atlas <- in_atlas %>% 
+  dplyr::mutate(endstart_lgt = (End - Start), 
+                peakstart_lgt = (Peak - Start)) %>% 
+  dplyr::select(1:9, endstart_lgt, peakstart_lgt, everything())
+
+p <- ggplot(in_atlas) + 
+  geom_jitter(aes(x = Season, y = endstart_lgt), size = 0.4, alpha = 0.5) + 
+  facet_wrap(~Stage) + theme_bw()
+p + ggtitle("Distribution of the differences between End and Start in riceatlas")
+
+p <- ggplot(in_atlas) + 
+  geom_jitter(aes(x = Season, y = peakstart_lgt), size = 0.4, alpha = 0.5) + 
+  facet_wrap(~Stage) + theme_bw()
+p + ggtitle("Distribution of the differences between Peak and Start in riceatlas")
+```
+
+From this, it is obvious that the dataset is generally coherent, but also that:
+
+1. In some cases the Start/Peak/End values do not account for "circularity". Therefore we can have cases such as:
+- `Start = 300 ,Peak = 350, End = 15` --> `End <=Start` and `Peak <= Start` --> leading to negative outliers
+- `Start = 15, Peak = 350, End = 320` --> `End <=Start` and `Peak <= Start` --> leading to positive outliers
+
+2. 
+
+riceatlas_phl2 <- riceatlas_phl %>% 
+# split columns
+tidyr::separate(Pheno_stage, c("stage", "season"), "_st") %>% 
+# remove NA rows
+dplyr::filter((Start != 0 & Peak != 0))  %>% 
+# remove NA rows
+dplyr::filter((Start != 0 & Peak != 0))  %>% 
+# Compute start vs end and start vs peak differences
+dplyr::mutate(diff_end_start = (End - Start), 
+diff_peak_start = (Peak - Start))
+
+
+```
+

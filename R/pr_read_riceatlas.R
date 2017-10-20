@@ -11,7 +11,7 @@
 #'  #EXAMPLE1
 #'  }
 #' }
-#' @rdname read_riceatlas
+#' @rdname pr_read_riceatlas
 #' @export
 #' @author Lorenzo Busetto, phD (2017) <lbusett@gmail.com>
 #' @importFrom dplyr filter left_join

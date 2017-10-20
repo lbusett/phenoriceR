@@ -13,7 +13,7 @@
 #'  #EXAMPLE1
 #'  }
 #' }
-#' @rdname reshape_outs
+#' @rdname pr_reshape_outs
 #' @export
 #' @author Lorenzo Busetto, phD (2017) <lbusett@gmail.com>
 
@@ -23,7 +23,7 @@ reshape_outs <- function(in_folder,
                          end_year,
                          crop_extent = NULL,
                          overwrite = F) {
-  extract_idl_outs(in_folder,
+  pr_extract_idl_outs(in_folder,
                    out_folder = file.path(out_folder,"single_files"),
                    start_year,
                    end_year,
@@ -32,10 +32,10 @@ reshape_outs <- function(in_folder,
                 "cumevi", "cumevi_vgt",
                 "veglgt", "totlgt",
                 "nseas")
-  create_ordered_tiffs(file.path(out_folder,"single_files"),
+  pr_create_ordered_tiffs(file.path(out_folder,"single_files"),
                        patterns,
                        file.path(out_folder,"param_series"))
-  decirc_phenorice(file.path(out_folder,"param_series"),
+  pr_decirc_phenorice(file.path(out_folder,"param_series"),
                    file.path(out_folder,"param_series/decirc"),
                    start_year,
                    end_year)

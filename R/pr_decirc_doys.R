@@ -22,7 +22,7 @@
 #' @importFrom gdalUtils gdalbuildvrt gdal_translate
 #' @importFrom raster stack setZ calc
 
-decirc_phenorice <- function(in_folder, out_folder, start_year, end_year){
+pr_decirc_phenorice <- function(in_folder, out_folder, start_year, end_year){
 
   dir.create(out_folder, recursive = TRUE, showWarnings = FALSE)
   tmp_folder <- file.path(out_folder, "tmp")
@@ -94,5 +94,3 @@ decirc_phenorice <- function(in_folder, out_folder, start_year, end_year){
   }
 }
 
-# in_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/"
-# out_folder <- file.path(in_folder, "decirc")

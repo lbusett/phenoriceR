@@ -9,7 +9,7 @@
 #'  #EXAMPLE1
 #'  }
 #' }
-#' @rdname rename_year_mosaics
+#' @rdname pr_rename_year_mosaics
 #' @export
 #' @author Lorenzo Busetto, phD (2017) <lbusett@gmail.com>
 
