@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>convert PhenoRice "dates" to julian date (diff to 2000-01-01) — pr_decirc_phenorice • phenoriceR</title>
+<title>FUNCTION_TITLE — pr_extract_subarea • phenoriceR</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -104,48 +104,60 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>convert PhenoRice "dates" to julian date (diff to 2000-01-01)</h1>
+    <h1>FUNCTION_TITLE</h1>
     </div>
 
     
-    <p>convert sos, pos and eos to a numeric julian date expressing number of
-days elapsed since 2000-01-01</p>
+    <p>FUNCTION_DESCRIPTION</p>
     
 
-    <pre class="usage"><span class='fu'>pr_decirc_phenorice</span>(<span class='no'>in_folder</span>, <span class='no'>out_folder</span>, <span class='no'>start_year</span>, <span class='no'>end_year</span>)</pre>
+    <pre class="usage"><span class='fu'>pr_extract_subarea</span>(<span class='no'>in_mosaics_folder</span>, <span class='no'>in_mask</span>, <span class='no'>subset_name</span>, <span class='no'>out_folder</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>in_folder</th>
-      <td><p>input folder containing the "ordered" multiband tiffs resulting from
-`create_ordered_tiffs``</p></td>
+      <th>in_mosaics_folder</th>
+      <td><p>PARAM_DESCRIPTION</p></td>
+    </tr>
+    <tr>
+      <th>in_mask</th>
+      <td><p>PARAM_DESCRIPTION</p></td>
+    </tr>
+    <tr>
+      <th>subset_name</th>
+      <td><p>PARAM_DESCRIPTION</p></td>
     </tr>
     <tr>
       <th>out_folder</th>
-      <td><p>where to store the results</p></td>
+      <td><p>PARAM_DESCRIPTION</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>NULL - files "sos_decirc.RData, sos_decirc.tif,
-eos_decirc.RData, eos_decirc.tif
-pos_decirc.RData, pos_decirc.tif
-are created in output folder</p>
+    <p>OUTPUT_DESCRIPTION</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>NOTE: Very slow on the full mosaics, but works in the same way on subsets and
-is (reasonably) fast.</p>
+    <p>DETAILS</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><span class='co'># NOT RUN {</span>
-  <span class='no'>in_folder</span>  <span class='kw'>&lt;-</span> <span class='st'>"/home/lb/my_data/prasia/mosaics/ordered/subsets/Nueva_Ecijia/"</span>
-  <span class='no'>out_folder</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='no'>in_folder</span>, <span class='st'>"decirc"</span>)
-  <span class='fu'>decirc_phenorice</span>(<span class='no'>in_folder</span>, <span class='no'>out_folder</span>)
+ <span class='no'>mosaic_folder</span> <span class='kw'>&lt;-</span> <span class='st'>"/home/lb/my_data/prasia/mosaics/ordered"</span>
+ <span class='no'>out_folder</span>  <span class='kw'>&lt;-</span> <span class='st'>"/home/lb/my_data/prasia/mosaics/ordered/subsets/"</span>
+ <span class='no'>subset_name</span> <span class='kw'>&lt;-</span> <span class='st'>"Nueva_Ecija"</span>
+ <span class='no'>in_country</span>  <span class='kw'>&lt;-</span> <span class='st'>"PHL"</span>
+ <span class='no'>boundmask</span>   <span class='kw'>&lt;-</span> <span class='kw pkg'>sprawl</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sprawl/topics/get_boundaries'>get_boundaries</a></span>(<span class='no'>in_country</span>, <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>1</span>) <span class='kw'>%&gt;%</span>
+ <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sf/topics/st_as_sf'>st_as_sf</a></span>() <span class='kw'>%&gt;%</span>
+ <span class='kw pkg'>dplyr</span><span class='kw ns'>::</span><span class='fu'><a href='http://dplyr.tidyverse.org/reference/filter.html'>filter</a></span>(<span class='no'>NAME_1</span> <span class='kw'>==</span> <span class='st'>"Nueva Ecija"</span>) <span class='kw'>%&gt;%</span>
+ <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sf/topics/geos_combine'>st_combine</a></span>()
+ <span class='fu'>extract_subarea</span>(<span class='no'>mosaic_folder</span>,
+                <span class='no'>boundmask</span>,
+                <span class='no'>subset_name</span>,
+                <span class='no'>out_folder</span>)
+
 <span class='co'># }</span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

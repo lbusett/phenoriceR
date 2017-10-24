@@ -21,7 +21,7 @@ read_riceatlas <- function(in_txt,
                            in_riceatlas_shp,
                            ISO){
   require(sf)
-  in_data <- read.csv2(in_txt)
+  in_data <- data.table::fread(in_txt)
   names(in_data)[1] = "OBJECTID"
   in_shape <- sprawl::read_vect(in_riceatlas_shp) %>%
     dplyr::filter(ISO == !!ISO)

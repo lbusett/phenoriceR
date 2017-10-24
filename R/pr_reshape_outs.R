@@ -17,7 +17,7 @@
 #' @export
 #' @author Lorenzo Busetto, phD (2017) <lbusett@gmail.com>
 
-reshape_outs <- function(in_folder,
+pr_reshape_outs <- function(in_folder,
                          out_folder,
                          start_year,
                          end_year,

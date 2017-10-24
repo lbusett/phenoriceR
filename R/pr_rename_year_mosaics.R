@@ -6,7 +6,9 @@
 #' @examples
 #' \dontrun{
 #' if(interactive()){
-#'  #EXAMPLE1
+#  mosaics_folder <- "/home/lb/my_data/prasia/mosaics/by_year/2017-07-22/"
+#  out_folder <- "/home/lb/my_data/prasia/mosaics/by_year"
+#  rename_year_mosaics(mosaics_folder, out_folder)
 #'  }
 #' }
 #' @rdname pr_rename_year_mosaics
@@ -29,6 +31,4 @@ rename_year_mosaics <- function(mosaics_folder, out_folder) {
   }
 }
 #
-#  mosaics_folder <- "/home/lb/my_data/prasia/mosaics/by_year/2017-07-22/"
-#  out_folder <- "/home/lb/my_data/prasia/mosaics/by_year"
-#  rename_year_mosaics(mosaics_folder, out_folder)
+

@@ -12,7 +12,7 @@
 #   mosaics_folder <- "/home/lb/nr_working/shared/PhenoRice/Asia/Data/mosaics/by_year/"
 #   outfold <- "home/lb/nr_working/shared/PhenoRice/Asia/Data/mosaics/by_year/ordered"
 #   patterns <- c("sos", "eos", "pos", "cumevi", "veglgt", "totlgt", "nseas")
-#   create_ordered_tiffs(mosaics_folder,patterns,out_fold)
+#   create_ordered_tiffs(mosaics_folder,patterns, out_fold)
 #' }
 #' @rdname pr_create_ordered_tiffs
 #' @export

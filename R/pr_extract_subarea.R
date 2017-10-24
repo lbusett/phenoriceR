@@ -16,7 +16,7 @@
 #'  sf::st_as_sf() %>%
 #'  dplyr::filter(NAME_1 == "Nueva Ecija") %>%
 #'  sf::st_combine()
-#'  extract_subarea(mosaic_folder,
+#'  pr_extract_subarea(mosaic_folder,
 #'                 boundmask,
 #'                 subset_name,
 #'                 out_folder)
@@ -40,12 +40,12 @@ pr_extract_subarea <- function(in_mosaics_folder,
   for (type in c("orig", "decirc")) {
 
     if (type == "orig") {
-      in_RData     <- list.files(file.path(mosaic_folder, "orig"), pattern = ".RData",
+      in_RData     <- list.files(file.path(in_mosaics_folder, "orig"), pattern = ".RData",
                                  full.names = TRUE)
       out_folder_2 <- sprawl::make_folder(file.path(out_folder,
                                                     "param_series/orig"))
     } else {
-      in_RData   <- list.files(file.path(mosaic_folder, "decirc"),
+      in_RData   <- list.files(file.path(in_mosaics_folder, "decirc"),
                                pattern = ".RData", full.names = TRUE)
       out_folder_2 <- sprawl::make_folder(file.path(out_folder,
                                                     "param_series/decirc"))
@@ -60,10 +60,11 @@ pr_extract_subarea <- function(in_mosaics_folder,
       out_tiff  <- file.path(out_folder_2, paste0(in_vars[file], ".tif"))
       out_RData <- file.path(out_folder_2, paste0(in_vars[file], ".RData"))
       if (!file.exists(out_tiff)) {
+
         out_rast  <- sprawl::crop_rast(in_rast,
                                        in_mask,
-                                       mask = T,
-                                       out_type = "rastobject",
+                                       mask      = T,
+                                       out_type  = "rastobject",
                                        out_file  = out_tiff,
                                        compress  = "DEFLATE")
         out_rast_full        <- sprawl::read_rast(out_tiff)
@@ -74,3 +75,4 @@ pr_extract_subarea <- function(in_mosaics_folder,
     }
   }
 }
+
