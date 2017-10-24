@@ -34,7 +34,7 @@ DETAILS
  sf::st_as_sf() \%>\%
  dplyr::filter(NAME_1 == "Nueva Ecija") \%>\%
  sf::st_combine()
- extract_subarea(mosaic_folder,
+ pr_extract_subarea(mosaic_folder,
                 boundmask,
                 subset_name,
                 out_folder)

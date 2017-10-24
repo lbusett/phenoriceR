@@ -1,11 +1,11 @@
 ---
 title: "RiceAtlas: Checks and Reshuffling of data"
 output:
-html_document:
-highlight: pygments
-theme: journal
-toc: yes
-toc_depth: 2
+  html_document:
+    highlight: pygments
+    theme: journal
+    toc: yes
+    toc_depth: 2
 editor_options:
 chunk_output_type: console
 ---
@@ -21,15 +21,17 @@ library(phenoriceR)
 library(dplyr)
 library(mapview)
 library(RColorBrewer)
+library(knitr)
 
 mapviewOptions(basemaps = c("Esri.WorldImagery", "OpenStreetMap.DE"),
                raster.palette = colorRampPalette(brewer.pal(9, "RdYlGn")),
                vector.palette = colorRampPalette(brewer.pal(9, "YlGnBu")),
                na.color = "transparent",
                layers.control.pos = "topright")
+main_folder <- "C:/Users/LB_laptop/Google Drive/Data/"
 ```
 Here I am going to document the passages used to reshuffle the RiceAtlas dataset, 
-and correct inconsistences, needed to allow an easier comparison with PhenoRice
+and correct inconsistencies, needed to allow an easier comparison with PhenoRice
 results.
 
 # Preprocessing - changes on data organization 
@@ -40,7 +42,8 @@ different seasons (e.g., __PLANT_ST_1__, __PLANT_ST_2__, ....).
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-in_riceatlas_shp = read_vect("/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp") 
+in_riceatlas_shp = read_vect(file.path(main_folder,
+                                       "vector/Ricetlas/riceatlas_asia.shp"))
 as.data.frame(head(in_riceatlas_shp, 2))
 ```
 
@@ -49,7 +52,8 @@ transforming the dataset in a more "manageable" long format:
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-in_data <- data.table::fread("/home/lb/my_data/prasia/Data/vector/NormalizedDB.txt")
+in_data <- data.table::fread(file.path(main_folder,
+                                       "/vector/NormalizedDB.txt"))
 head(in_data)
 ```
 
@@ -65,7 +69,7 @@ in_atlas <- in_data %>%
   # remove empty rows
   dplyr::filter((Start != 0 | Peak != 0 | End != 0)) %>%
   # create a unique name for each region
-  dplyr::mutate(reg_name = paste(ISO, Region, Sub_region)) %>%
+  dplyr::mutate(reg_name = paste(ISO, Region, Sub_region), sep = "_") %>%
   dplyr::mutate(reg_name = stringr::str_replace(reg_name, "NA", "")) %>%
   # Rename and reorder columns
   dplyr::select(Objectid, ISO, reg_name, N_seasons, season,
@@ -85,7 +89,7 @@ head(in_atlas)
 # Checks on "consistency of the dataset"
 
 A quick check on the "consistency" of the dataset can be made by computing the 
-differences between the differences beteween the reported "Start", "Peak" and 
+differences between the reported "Start", "Peak" and 
 "End" DOYs, for each region. 
 ```{r}
 
@@ -137,28 +141,43 @@ Therefore we can have cases such as:
 `Start = 213 ,Peak = 227, End = 213`, `Start = 277, Peak = 19, End = 307`), as well
 as obvious mistakes (e.g., `Start = 74, Peak = 74, End = 196`, `Start = 1, Peak = 4, End = 66`)
 
-We also shows a very "anomalous" high frequency at `Peak - Start = 30`, but we can 
+We also have a very "anomalous" high frequency at `Peak - Start = 30`, but we can 
 not do anything about that.
 
-All this makes an automatic comparison with PhenoRice results difficult. For example, 
-see what we have as `Start - Peak - End` ranges for some provinces in PHL: 
+All this makes an automatic comparison with PhenoRice results difficult.
 
-```{r fig.width=7}
-in_phl <- in_atlas %>% 
-  dplyr::filter(cty == "PHL" & Region == "Region 3 - Central Luzon")
+## Initial situation - PHL
 
-ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
-  geom_point(aes(y = Peak, color = Stage), position = position_dodge(.3)) + 
-  geom_errorbar(aes(ymax = End, ymin = Start, color = Stage), 
-                position = position_dodge(width = .3)) +
-  facet_wrap(~Season, scales = "free_x") + coord_flip()  +
-  ylab("DOY") + xlab("RiceAtlas polygon")
-```
-
+For example, see what we have as `Start - Peak - End` ranges for some provinces in PHL: 
 
 A mix of correct data, some missing data (e.g, Tarlac Harvesting Start), and 
 inconsistent data (e.g., Nueva Ecjia Planting; Bataan Harvesting). Most of the 
-problems are obviously related to "circularization" of DOYS. 
+problems are obviously related to "circularization" of DOYS in Season 2, which 
+crosses the year, and for which Start/Peak/End are evidently not coherent.
+In addition, we have the already mentioned problems of "switched" seasons, in some 
+cases (though in the end this is the lesser problem)
+
+```{r echo=FALSE, fig.width=8}
+in_phl <- in_atlas %>% dplyr::filter(cty == "PHL") 
+in_phl <- in_phl   %>% dplyr::filter(Region %in% unique(in_phl$Region)[2:9])
+
+print(ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
+  geom_point(aes(y = Peak, color = Stage), position = position_dodge(.3)) + 
+  geom_errorbar(aes(ymax = End, ymin = Start, color = Stage), 
+                position = position_dodge(width = .3)) +
+  facet_wrap(~Season) + coord_flip()  +
+  ylab("DOY") + xlab("RiceAtlas polygon") + 
+  ggtitle("Start/Peak/End ranges vs Season - Original"))
+
+print(ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
+  geom_point(aes(y = Peak, color = factor(Season)), position = position_dodge(.3)) + 
+  geom_errorbar(aes(ymax = End, ymin = Start, color = factor(Season)), 
+                position = position_dodge(width = .3)) +
+  facet_wrap(~Stage) + coord_flip()  +
+  ylab("DOY") + xlab("RiceAtlas polygon") +
+  ggtitle("Start/Peak/End ranges vs Season - Original"))
+```
+
 
 # Reshufflling of RiceAtlas data to solve the problem
 
@@ -169,31 +188,31 @@ in a consistent way.
 
 out_atlas <- in_atlas %>% 
   # add 365 to End/Peak where differences are negative
-  lbscripts::mutate_when((endstart_lgt < 0 & endstart_lgt < 0), 
+  pr_mutate_when((endstart_lgt < 0 & endstart_lgt < 0), 
                          list(End = End + 365)) %>%
   # re-create the diffs for test purposes
   dplyr::mutate(endstart_lgt = (End - Start),
                 peakstart_lgt = (Peak - Start), 
                 endpeak_lgt   = (End - Peak)) %>% 
   # Second fix where we still have prblems
-  lbscripts::mutate_when((endpeak_lgt > 250 & peakstart_lgt < -250 & !is.na(Start)), 
+  pr_mutate_when((endpeak_lgt > 250 & peakstart_lgt < -250 & !is.na(Start)), 
                          list(Start = Start - 365)) %>% 
-  lbscripts::mutate_when((endpeak_lgt > 250 & peakstart_lgt < -250 & !is.na(End)), 
+  pr_mutate_when((endpeak_lgt > 250 & peakstart_lgt < -250 & !is.na(End)), 
                          list(End   = End - 365)) %>% 
   # re-create the diffs for test purposes
   dplyr::mutate(endstart_lgt = (End - Start),
                 peakstart_lgt = (Peak - Start), 
                 endpeak_lgt   = (End - Peak)) %>% 
   # Third fix where we still have prblems
-  lbscripts::mutate_when(endpeak_lgt > 300, 
+  pr_mutate_when(endpeak_lgt > 300, 
                          list(End   = End - 365)) %>% 
   # re-create the diffs for test purposes
   dplyr::mutate(endstart_lgt = (End - Start),
                 peakstart_lgt = (Peak - Start), 
                 endpeak_lgt   = (End - Peak)) %>%
   # Remove Start/End when they are equal to Peak
-  lbscripts::mutate_when((Start == Peak), list(Start = NA)) %>%
-  lbscripts::mutate_when((End == Peak),   list(End   = NA)) 
+  pr_mutate_when((Start == Peak), list(Start = NA)) %>%
+  pr_mutate_when((End == Peak),   list(End   = NA)) 
 
 # Now manually fixErros and corner cases
 out_atlas <- out_atlas %>% 
@@ -202,28 +221,28 @@ out_atlas <- out_atlas %>%
   #( Harvesting:  Start  = 4  Peak = 292  End = 34;  Planting: Start  = 277   Peak = 19   End = 307).
   #The obnly reasonable way IMO is to remove Start and set End to 365 + 34 (Planting)
   #and remove Start and End (Harvesting)
-  lbscripts::mutate_when((reg_name == "IND Puducherry Yanam" & Stage == "Harvesting" & Season == 2),
+  pr_mutate_when((reg_name == "IND Puducherry Yanam" & Stage == "Harvesting" & Season == 2),
                          list(Start = NA, End = 365 + End)) %>%
-  lbscripts::mutate_when((reg_name == "IND Puducherry Yanam" & Stage == "Planting" & Season == 2),
+  pr_mutate_when((reg_name == "IND Puducherry Yanam" & Stage == "Planting" & Season == 2),
                          list(Start = NA, End = NA)) %>% 
   #"MMR Tanintharyi"
-  lbscripts::mutate_when((reg_name == "MMR Tanintharyi " & Stage == "Planting" & Season == 2),
+  pr_mutate_when((reg_name == "MMR Tanintharyi " & Stage == "Planting" & Season == 2),
                          list(Start = NA, End   = NA)) %>% 
   #"severla places with "213   227   213"" --> Remove End
-  lbscripts::mutate_when((Start == 213 & Peak == 227 & End == 213), list(End = NA)) %>% 
+  pr_mutate_when((Start == 213 & Peak == 227 & End == 213), list(End = NA)) %>% 
    #IND Orissa Nuapada
-  lbscripts::mutate_when((reg_name == "IND Orissa Nuapada" & Stage == "Planting" & Season == 3),
+  pr_mutate_when((reg_name == "IND Orissa Nuapada" & Stage == "Planting" & Season == 3),
                          list(End = NA)) %>% 
   #IND Uttaranchal Naini Tal
-  lbscripts::mutate_when((reg_name == "IND Uttaranchal Naini Tal" & Stage == "Planting" & Season == 1),
+  pr_mutate_when((reg_name == "IND Uttaranchal Naini Tal" & Stage == "Planting" & Season == 1),
                          list(End = NA)) %>% 
   #IND Orissa Malkangiri: Peak == 0. Resete to midpoint S/E
-  lbscripts::mutate_when((reg_name == "IND Orissa Malkangiri" & Stage == "Planting" & Season == 2),
+  pr_mutate_when((reg_name == "IND Orissa Malkangiri" & Stage == "Planting" & Season == 2),
                          list(Peak = 258)) %>% 
   #several places with "319   305   334" --> Remove Start
-  lbscripts::mutate_when((peakstart_lgt == -14), list(Start = NA)) %>% 
+  pr_mutate_when((peakstart_lgt == -14), list(Start = NA)) %>% 
   #several places with "30   -5   35" --> Remove Start
-  lbscripts::mutate_when((peakstart_lgt == -5),                         list(Start   = NA)) %>% 
+  pr_mutate_when((peakstart_lgt == -5),                         list(Start   = NA)) %>% 
     # re-create the diffs for test purposes
   dplyr::mutate(endstart_lgt = (End - Start),
                 peakstart_lgt = (Peak - Start), 
@@ -256,24 +275,26 @@ Ok. Now we are in much better shape (note that I never touched the "Peak" date, 
 we take as "reference"). `End - Start` is always positive, as well as `End - Peak`. 
 Still some polygons with "anomalously" large ranges, but we can live with those.
 
-Let's see the PHL region:
+Let's see the PHL region again:
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
-in_phl <- out_atlas %>% 
-  dplyr::filter(cty == "PHL" & Region == "Region 3 - Central Luzon")
+```{r echo=FALSE, fig.width=8, message=FALSE, warning=FALSE, paged.print=FALSE}
+# in_phl <- out_atlas %>% 
+#   dplyr::filter(cty == "PHL" & Region == "Region 3 - Central Luzon")
+in_phl <- out_atlas %>% dplyr::filter(cty == "PHL") 
+in_phl <- in_phl   %>% dplyr::filter(Region %in% unique(in_phl$Region)[2:9])
 
 ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
   geom_point(aes(y = Peak, color = Stage), position = position_dodge(.3)) + 
   geom_errorbar(aes(ymax = End, ymin = Start, color = Stage), 
                 position = position_dodge(width = .3)) +
-  facet_wrap(~Season, scales = "free_x") + coord_flip()  +
+  facet_wrap(~Season) + coord_flip()  +
   ylab("DOY") + xlab("RiceAtlas polygon")
 ```
 
-Almost there. NOw I'll just have to reconcile the planting and the harvesting. 
+**Much better** but still not there. Now I'll have to reconcile the planting and the harvesting. 
 If Harvesting after reshuffling is still before planting, subtract 365:
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
 
 reorganize <- function(sub_atlas) {
   for (seas in unique(sub_atlas$Season)) {
@@ -285,7 +306,6 @@ reorganize <- function(sub_atlas) {
       sub_atlas[sub_atlas$Season == seas,]$End[1]   <- data_in$End[1] - 365
     }
   }
-  
   sub_atlas
 }
 
@@ -298,32 +318,77 @@ for (regind in seq_along(regions)) {
   final_out[[regind]] <- reorganize(indata)
 }
 final_out <- data.table::rbindlist(final_out)
-write.table(final_out,
-           file = "/home/lb/my_data/prasia/Data/vector/NormalizedDB_Asia_final.txt", 
-           sep = "  ",
-          row.names = FALSE)
-
-out_shp <- in_riceatlas_shp %>% 
-  left_join(final_out, by = c("OBJECTID" = "OBJECTID", "ISO" = "cty"))
-
-write_shape(out_shp,
-            "/home/lb/my_data/prasia/Data/vector/RiceAtlas_reshuffled.shp")
-
 
 ```
 
 Let's see the result: 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
-in_phl <- final_out %>% 
-  dplyr::filter(cty == "PHL" & Region == "Region 3 - Central Luzon")
+in_phl <- final_out %>% dplyr::filter(cty == "PHL") 
+in_phl <- in_phl   %>% dplyr::filter(Region %in% unique(in_phl$Region)[2:9])
 
 ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
   geom_point(aes(y = Peak, color = Stage), position = position_dodge(.3)) + 
   geom_errorbar(aes(ymax = End, ymin = Start, color = Stage), 
                 position = position_dodge(width = .3)) +
-  facet_wrap(~Season, scales = "free_x") + coord_flip() +
-    ylab("DOY") + xlab("RiceAtlas polygon")
+  facet_wrap(~Season) + coord_flip()  +
+  ylab("DOY") + xlab("RiceAtlas polygon")
 ```
 
-**ALL SET !**
+**Almost ALL SET !** Now reorder the seasons so that 1 - 2 - 3 is always in order
+(not really needed, but while we are at it....)
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+final_out2 <- final_out %>% 
+    group_by(reg_name, Stage) %>% 
+    dplyr::mutate(Seas_ord = rank(Peak, ties.method = "first"))
+```
+
+## Final situation - PHL
+
+Here the final result:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+in_phl <- final_out2 %>% dplyr::filter(cty == "PHL") 
+in_phl <- in_phl   %>% dplyr::filter(Region %in% unique(in_phl$Region)[2:9])
+
+print(ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
+  geom_point(aes(y = Peak, color = Stage), position = position_dodge(.3)) + 
+  geom_errorbar(aes(ymax = End, ymin = Start, color = Stage), 
+                position = position_dodge(width = .3)) +
+  facet_wrap(~Seas_ord) + coord_flip()  +
+  ylab("DOY") + xlab("RiceAtlas polygon") + 
+  ggtitle("Start/Peak/End ranges vs Season - Final"))
+
+print(ggplot(data = in_phl, aes(x = Sub_region)) + theme_bw() +
+  geom_point(aes(y = Peak, color = factor(Seas_ord)), position = position_dodge(.3)) + 
+  geom_errorbar(aes(ymax = End, ymin = Start, color = factor(Seas_ord)), 
+                position = position_dodge(width = .3)) +
+  facet_wrap(~Stage) + coord_flip()  +
+  ylab("DOY") + xlab("RiceAtlas polygon") + 
+  ggtitle("Start/Peak/End ranges vs Season - Final"))
+
+```
+
+**DONE! ** Now we have a coherent dataset. 
+We can save the reshuflled dataset, after re-joining the geometry.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE, eval = FALSE}
+in_shp <- in_riceatlas_shp %>% 
+  select(OBJECTID, ISO) %>% 
+  rename(cty = ISO) %>% 
+  arrange(cty, OBJECTID)
+
+out_shp <- in_shp %>% 
+  left_join(final_out2)
+
+write_shape(out_shp, file.path(main_folder, 
+                               "/vector/Ricetlas/riceatlas_asia_reshuffled.shp"))
+# out_phl <- out_shp %>% 
+#   dplyr::filter(cty == "PHL", Seas_ord == 2, Stage == "Planting")
+# 
+# plot_vect(out_phl, fill_var = "Peak", palette_name = "RdYlGn")
+
+
+```
