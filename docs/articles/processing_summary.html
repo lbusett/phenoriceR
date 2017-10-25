@@ -45,10 +45,16 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/Data_extraction.html">Processing passages - Data Extraction</a>
+    </li>
+    <li>
       <a href="../articles/processing_summary.html">Processing passages</a>
     </li>
     <li>
       <a href="../articles/RiceAtlas_Comparison.html">RiceAtlas Comparison</a>
+    </li>
+    <li>
+      <a href="../articles/RiceAtlas_Reshuffling.html">RiceAtlas: Checks and Reshuffling of data</a>
     </li>
     <li>
       <a href="../articles/RiceAtlas_Work.html">RiceAtlas - Questions and proposals for processing</a>
@@ -97,7 +103,7 @@
 <span class="co"># `rename_year_mosaics</span>
 mosaics_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/by_year/2017-07-22/"</span>
 out_folder     &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/by_year"</span>
-<span class="kw"><a href="../reference/rename_year_mosaics.html">rename_year_mosaics</a></span>(mosaics_folder, out_folder)</code></pre></div>
+<span class="kw"><a href="../reference/pr_rename_year_mosaics.html">rename_year_mosaics</a></span>(mosaics_folder, out_folder)</code></pre></div>
 </div>
 <div id="create-single-files-containing-time-series-for-each-parameter" class="section level3">
 <h3 class="hasAnchor">
@@ -108,7 +114,7 @@ out_folder     &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/by_year"<
 mosaics_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/by_year/"</span>
 outfold        &lt;-<span class="st"> "/home/lb/my_data/prasia/mosaics/ordered"</span>
 patterns       &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">"sos"</span>, <span class="st">"eos"</span>, <span class="st">"pos"</span>, <span class="st">"cumevi"</span>, <span class="st">"veglgt"</span>, <span class="st">"totlgt"</span>, <span class="st">"nseas"</span>)
-<span class="kw"><a href="../reference/create_ordered_tiffs.html">create_ordered_tiffs</a></span>(mosaics_folder, patterns, out_folder )</code></pre></div>
+<span class="kw">create_ordered_tiffs</span>(mosaics_folder, patterns, out_folder )</code></pre></div>
 </div>
 </div>
 <div id="automatic-subsetting-and-masking-on-regions-of-interest" class="section level2">
@@ -146,7 +152,7 @@ boundmask   &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span 
 
 <span class="co"># boundmask &lt;- sf::st_transform(boundmask, get_proj4string("/home/lb/my_data/prasia/mosaics/ordered/decirc/sos_02_decirc.tif"))</span>
 
-<span class="kw"><a href="../reference/extract_subarea.html">extract_subarea</a></span>(mosaic_folder,
+<span class="kw">extract_subarea</span>(mosaic_folder,
                 boundmask,
                 subset_name,
                 <span class="dt">out_folder  =</span> subsets_folder)</code></pre></div>
@@ -210,7 +216,7 @@ dataplot &lt;-<span class="st"> </span>datain <span class="op">%&gt;%</span><spa
 <p>(This passage is very slow on the full mosaics because I didn’t have time yet to optimize it, but since we need to do it only once we can live with it for the mkoment. Moreover, when working on smaller subsets it is reasonably fast, so I’ll stay like this at the moment)</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_folder  &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig"</span>
 out_folder &lt;-<span class="st"> </span><span class="kw">file.path</span>(in_folder, <span class="st">"decirc"</span>)
-<span class="kw"><a href="../reference/decirc_phenorice.html">decirc_phenorice</a></span>(in_folder, out_folder)</code></pre></div>
+<span class="kw">decirc_phenorice</span>(in_folder, out_folder)</code></pre></div>
 <p>Let’s mask again the de-circularized data on Nueva Ecija:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc"</span>
 r &lt;-<span class="st"> </span><span class="kw">read_rast</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.tif"</span>)
@@ -220,29 +226,13 @@ boundmask   &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span 
 <span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>() <span class="op">%&gt;%</span>
 <span class="st">  </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(NAME_<span class="dv">1</span> <span class="op">==</span><span class="st"> "Nueva Ecija"</span>) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_as_sf">st_as_sf</a></span>()<span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw">get_proj4string</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig/cumevi_ordered.tif"</span>))
-
-
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw">get_proj4string</span>(<span class="st">"/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.RData"</span>)
 <span class="co"># insos_decirc_NE &lt;- mask_rast(r, boundmask, crop = T,</span>
 <span class="co">#                              out_filename = file.path(in_folder,"subsets/NE/insos_NE.tif"), </span>
 <span class="co">#                              parallel = T)</span>
 insos_decirc_NE &lt;-<span class="st"> </span><span class="kw">read_rast</span>(<span class="kw">file.path</span>(in_folder,<span class="st">"subsets/NE/insos_NE.tif"</span>))
 <span class="kw">NAvalue</span>(insos_decirc_NE) &lt;-<span class="st"> </span><span class="dv">0</span>
 <span class="kw">summary</span>(insos_decirc_NE[[<span class="dv">1</span><span class="op">:</span><span class="dv">8</span>]])</code></pre></div>
-<pre><code>##         insos_NE.1 insos_NE.2 insos_NE.3 insos_NE.4 insos_NE.5 insos_NE.6
-## Min.           972       1020       1113       1201       1329       1385
-## 1st Qu.        996       1092       1225       1281       1337       1465
-## Median        1004       1100       1257       1289       1361       1473
-## 3rd Qu.       1010       1108       1265       1305       1377       1478
-## Max.          1020       1177       1273       1369       1401       1542
-## NA's        229891     214558     228692     216181     229520     215718
-##         insos_NE.7 insos_NE.8
-## Min.          1478       1566
-## 1st Qu.       1590       1646
-## Median        1614       1654
-## 3rd Qu.       1630       1654
-## Max.          1638       1734
-## NA's        227834     219532</code></pre>
 <p>You see that the “dates” are more or less monotonically increasing on the different seasons, though there are some overlaps. Analyzing the seasons separately would therefore be difficult. So, it’s better to put everyting in a single array (note that here I can do this brute force, but for larger areas it will be impossible):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># get the data for three years as an array that contains all detected sos dates in Nueva </span>
 <span class="co"># Ecijia as a single array</span>

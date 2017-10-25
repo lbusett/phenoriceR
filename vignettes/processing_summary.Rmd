@@ -192,7 +192,7 @@ decirc_phenorice(in_folder, out_folder)
 
 Let's mask again the de-circularized data on Nueva Ecija: 
 
-```{r, message=FALSE, warning=FALSE, eval = TRUE}
+```{r, message=FALSE, warning=FALSE, eval = FALSE}
 in_folder <- "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc"
 r <- read_rast("/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.tif")
 subset_name <- "Nueva_Ecija"
@@ -201,9 +201,7 @@ boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
   sf::st_as_sf() %>%
   dplyr::filter(NAME_1 == "Nueva Ecija") %>% 
   sf::st_as_sf()%>% 
-  sf::st_transform(get_proj4string("/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig/cumevi_ordered.tif"))
-
-
+  sf::st_transform(get_proj4string("/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.RData")
 # insos_decirc_NE <- mask_rast(r, boundmask, crop = T,
 #                              out_filename = file.path(in_folder,"subsets/NE/insos_NE.tif"), 
 #                              parallel = T)

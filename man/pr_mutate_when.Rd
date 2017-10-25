@@ -2,7 +2,7 @@
 % Please edit documentation in R/pr_mutate_when.R
 \name{pr_mutate_when}
 \alias{pr_mutate_when}
-\title{mutate_when}
+\title{pr_mutate_when}
 \usage{
 pr_mutate_when(data, ...)
 }

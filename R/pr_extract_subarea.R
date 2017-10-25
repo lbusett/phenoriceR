@@ -31,13 +31,14 @@
 pr_extract_subarea <- function(in_mosaics_folder,
                             in_mask,
                             subset_name,
-                            out_folder) {
+                            out_folder,
+                            what = c("decirc", "orig")) {
   #   ____________________________________________________________________________
   #   Mask and save (this will become a function in the future)            ####
 
   out_folder <- file.path(out_folder, subset_name)
 
-  for (type in c("orig", "decirc")) {
+  for (type in what) {
 
     if (type == "orig") {
       in_RData     <- list.files(file.path(in_mosaics_folder, "orig"), pattern = ".RData",
@@ -57,8 +58,13 @@ pr_extract_subarea <- function(in_mosaics_folder,
       message("extract_subarea --> Extracting: `", in_vars[file], "` data on: `", subset_name,
               "` Please Wait !")
       in_rast   <- get(load(in_RData[file]))
+      if (type == "orig") {
       out_tiff  <- file.path(out_folder_2, paste0(in_vars[file], ".tif"))
       out_RData <- file.path(out_folder_2, paste0(in_vars[file], ".RData"))
+      } else{
+        out_tiff  <- file.path(out_folder_2, paste0(in_vars[file], "_decirc.tif"))
+        out_RData <- file.path(out_folder_2, paste0(in_vars[file], "_decirc.RData"))
+      }
       if (!file.exists(out_tiff)) {
 
         out_rast  <- sprawl::crop_rast(in_rast,

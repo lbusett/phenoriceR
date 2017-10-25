@@ -1,5 +1,5 @@
 ---
-  title: "Processing passages - Data Extraction"
+title: "Processing passages - Data Extraction"
 output:
   html_document:
   highlight: pygments
@@ -36,232 +36,43 @@ mapviewOptions(basemaps = c("Esri.WorldImagery", "OpenStreetMap.DE"),
 #   ____________________________________________________________________________
 #   set input and output folders                                            ####
 
-in_shp <- read_vect("/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp")
+library(sf)
+library(dplyr)
+library(sprawl)
+main_folder <- "/home/lb/my_data/prasia/Data"
 
-sub_area  <- "Region 3 - Central Luzon"
-in_region <- dplyr::filter(in_shp, ISO == "PHL",
-                           REGION == sub_area)
-sub_area <- "Reg_3"
-in_region <- in_region[1] %>%
- sf::st_combine() %>%
- sf::st_sf(id = 1, sf_column_name = ".") %>%
- sf::st_transform(get_proj4string("/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/eos_decirc.tif"))
+in_shp <- read_vect(file.path(main_folder, 
+                              "vector/Ricetlas/riceatlas_asia_reshuffled.shp"))
 
-mosaic_folder  <- "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/"
-subsets_folder <- "/home/lb/my_data/prasia/Data/subsets"
+Region_name <- "Region_3_-_Central_Luzon"
+
+in_vect <- dplyr::filter(in_shp, Region == Region_name)
+
+# Get the polygons of a specific region from the shapefile
+in_vect <- in_vect[1:3] %>%
+  sf::st_transform(get_proj4string(
+    file.path(main_folder,"orig_mosaic/param_series/decirc/eos_decirc.tif"))) %>% 
+  unique()
+
+plot_vect(in_vect, fill_var = "ID")
+
+mosaic_folder  <- file.path(main_folder, "orig_mosaic/param_series/")
+subsets_folder <- file.path(main_folder, "subsets")
 make_folder(subsets_folder, type = "dirname", verbose = T)
 
 pr_extract_subarea(mosaic_folder,
-                in_region,
-                sub_area,
-                out_folder  = subsets_folder)
+                   in_vect,
+                   subset_name = Region_name,
+                   out_folder  = subsets_folder)
+in_files <- list.files(
+  file.path(subsets_folder, Region_name, "param_series/decirc"),
+  pattern= "*.RData", 
+  full.names = TRUE)
+
+in_rast <- get(load(in_files[1]))
+raster::NAvalue(in_rast) <- 0
+out <- sprawl::extract_rast(in_rast,
+                     in_vect,
+                     join_geom = FALSE, 
+                     id_field = "ID")
 ```
-
-
-Now, in "out_folder/subsets/subsets_name" we have the "ordered" phenorice tiffs, subsetted
-and masked on the region of interest. We can work starting from that folder, now.
-
-Let's see some quick plots:
-
-```{r, message=FALSE, warning=FALSE, eval = TRUE}
-subsets_folder <- "/home/lb/my_data/prasia/Data/subsets/"
-sosfile <- get(load(file.path(subsets_folder, "Nueva_Ecija/param_series/orig/", "sos.RData")))
-boundaries <- get_boundaries("PHL", 1)
-# find the bands of "s2" season
-which_s2 <- which(regexpr("_s2", names(sosfile)) != -1)
-sprawl::plot_rast_gg(sosfile[[which_s2[c(2,4,6,8,10)]]],
-title = "SOS doy - Season 2 - Nueva Ecija",
-palette_name = "RdYlGn", zlims = c(0.02,0.98), zlims_type = "percs",
-outliers_style = "to_minmax", na.color = "transparent",
-borders_layer = boundaries,
-scalebar_dist = 20)
-
-eosfile <- get(load(file.path(subsets_folder, "Nueva_Ecija/param_series/orig/", "eos.RData")))
-NAvalue(eosfile) = -999
-sprawl::plot_rast_gg(eosfile[[which_s2[c(2,4,6,8,10)]]],
-title = "EOS doy- Season 2 - Nueva Ecija",
-palette_name = "RdYlGn", zlims = c(0.02,0.98), zlims_type = "percs",
-outliers_style = "to_minmax", na.color = "transparent",
-borders_layer = boundaries,
-scalebar_dist = 20)
-
-# Extract data on a fishnet and plot as a vector
-net <- create_fishnet(sosfile[[1]], cellsize = 3500, shape = "hex")
-extr_data <- extract_rast(sosfile[[which_s2]], net, full_data = FALSE)
-datain <- extr_data$stats %>%
-# dplyr::filter(band_name == "sos_2003_s2") %>%
-dplyr::filter(!is.na(avg))
-borders <- get_boundaries("PHL", level = 1)
-dataplot <- datain %>%
-dplyr::filter(band_name %in% c("sos_2003_s2", "sos_2007_s2", "sos_2011_s2",
-"sos_2015_s2"))
-plot_vect(dataplot, fill_var = "avg",
-borders_layer = borders,
-palette = "RdYlGn",
-na.color = "transparent",
-title = "Sowing dates") + facet_wrap(~band_name)
-
-```
-
-## Extract data in an "analysis friendly" format
-
-The format of the sos, eos and pos parameters makes it difficult to further analyze them
-because:
-
-1. they use DOY, which is a "circular" variable which is difficult to use in any statistical
-analysis. To further add to this problem, in PhenoRice outputs we can have both positive and
-negative doys (at least in s1), and doys >365 (at least in s4);
-2. data is "artificially" subdivided in the 4 "seasons" specified in PhenoRice processing.
-This subdivision doesn't make any sense from an "agronomic" point of view: we need to be
-able to "collapse" all data for a given area into a **single time series of event occurrence**
-  (sos, pos or eos) covering the 14 years of analysis, on which we can later make statistical analysis.
-
-To do so:
-
-  ### "Decircularize" the doy-year information
-
-  By "decircularize" I mean going from the DOY representation to a Julian Date representation,
-which has the advantage of being a continouos monotonically increasing variable.
-
-sos, eos and pos dates are therefore here converted to a numeric variable representing the
-number of days elapsed since 01/01/2000. (Note however that it is always possible to go back
-                                          to the date by simply "adding" the values reported to the raster to 01/01/2000)
-
-(This passage is very slow on the full mosaics because I didn't have time yet to optimize
-  it, but since we need to do it only once we can live with it for the mkoment. Moreover, when
-  working on smaller subsets it is reasonably fast, so I'll stay like this at the moment)
-
-```{r eval = FALSE, message=FALSE, warning=FALSE, eval = FALSE}
-in_folder  <- "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig"
-out_folder <- file.path(in_folder, "decirc")
-decirc_phenorice(in_folder, out_folder)
-```
-
-Let's mask again the de-circularized data on Nueva Ecija:
-
-```{r, message=FALSE, warning=FALSE, eval = TRUE}
-in_folder <- "/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc"
-r <- read_rast("/home/lb/my_data/prasia/Data/orig_mosaic/param_series/decirc/sos_decirc.tif")
-subset_name <- "Nueva_Ecija"
-in_country  <- "PHL"
-boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
-sf::st_as_sf() %>%
-dplyr::filter(NAME_1 == "Nueva Ecija") %>%
-sf::st_as_sf()%>%
-sf::st_transform(get_proj4string("/home/lb/my_data/prasia/Data/orig_mosaic/param_series/orig/cumevi_ordered.tif"))
-
-
-# insos_decirc_NE <- mask_rast(r, boundmask, crop = T,
-#                              out_filename = file.path(in_folder,"subsets/NE/insos_NE.tif"),
-#                              parallel = T)
-insos_decirc_NE <- read_rast(file.path(in_folder,"subsets/NE/insos_NE.tif"))
-NAvalue(insos_decirc_NE) <- 0
-summary(insos_decirc_NE[[1:8]])
-```
-
-You see that the "dates" are more or less monotonically increasing on the different seasons,
-though there are some overlaps. Analyzing the seasons separately would therefore be
-difficult. So, it's better to put everyting in a single array (note that here I can do this brute
-                                                               force, but for larger areas it will be impossible):
-
-  ```{r, message=FALSE, warning=FALSE}
-# get the data for three years as an array that contains all detected sos dates in Nueva
-# Ecijia as a single array
-insos_decirc <- get(load(
-  "/home/lb/my_data/prasia/Data/subsets/Nueva_Ecija/param_series/decirc/sos.RData"
-))
-sos = (as.Date("2000-01-01") + raster::getValues(insos_decirc[[1:24]]))
-sos = sos[!is.na(sos)]
-alldata = data.frame(sos = sos) %>%
-  as_tibble()
-
-ggplot(alldata, aes(x = sos)) +
-  geom_histogram(binwidth = 8) +
-  scale_x_date(date_breaks = "1 year", limits = as.Date(c("2002-06-01", "2008-12-01"))) +
-  theme_bw() + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-```
-
-This clearly depicts the double seasonality of Nueva Ecjia. It also evidences the rather
-narrower range of detected sos in winter.
-
-However, what I wanted to point out is that "decircularizing" the DOYS allows to analyze
-them more easily, becaus we can "treat" the detected sos as a whole time series of events,
-without having to think about to which "season" PhenoRice assigned the sos.
-
-### Aggregate to lower resolution
-
-To be able to work with a manageable number of "pixels" over large areas, and also to create
-large-scale maps, it could be worthy to aggregate the results over regular grids:
-
-  ```{r, message=FALSE, warning=FALSE}
-
-in_fishnet <- sprawl::create_fishnet(insos_decirc, pix_for_cell = 21,
-                                     shape = "hex")
-plot_rast(insos_decirc[[2]], in_poly = in_fishnet)
-insos_decirc_5k <- extract_rast(insos_decirc,
-                                in_fishnet,
-                                join_geom = FALSE,
-                                verbose = FALSE)
-
-insos5kdata <- insos_decirc_5k$alldata %>%
-  dplyr::filter(!is.na(value))  %>%
-  dplyr::mutate(sosdate = as.Date("2000-01-01") + value,
-                fc = N/n_pix,
-                area = 2146.58*fc) %>%
-  dplyr::arrange(id_feat, band_n)
-insos5kdata
-
-summary(insos5kdata$fc)
-```
-
-here we get, for each 5km cell, the average sos date estimated in the different years and
-seasons, the number of pixels detected within the cell from which we can compute the
-detected area (so that we can filter-out 5k cells where only few pixels where rice - in this
-               case you can see that half of the 5k cells got a 50 % rice "detection").
-
-Again, having de-circulated the doys allows to treat all data as a continuous series.
-Here I plot the frequency histograms derived by considering all Nueva Ecjia cells with fc
-above 0.5:
-
-  ```{r, message=FALSE, warning=FALSE, eval = TRUE}
-insos5kdata_filt <- insos5kdata %>%
-  dplyr::filter(fc >= 0.5)
-insos5kdata_filt
-
-# plot the distibutioni of detected dates in cells above 50%
-
-ggplot(insos5kdata_filt, aes(x = sosdate)) +
-  geom_histogram(binwidth = 8) +
-  scale_x_date(date_breaks = "1 year", limits = as.Date(c("2003-06-01", "2016-12-01"))) +
-  theme_bw() + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-```
-
-To analyze interannual variations, we will have however to "split" the series somewhere,
-but now we can decide where. Here I try with october.
-
-```{r, message=FALSE, warning=FALSE, eval = TRUE}
-years <- 2002:2016
-season <- cut((insos5kdata_filt$sosdate),
-              breaks = as.Date(paste(years,"-01-10",sep="")),
-              labels = paste(years[-length(years)],years[-length(years)]+1,sep="/"))
-
-insos5kdata_filt <- insos5kdata_filt %>%
-  mutate(date_fake = doytodate(datetodoy(sosdate), 2003)) %>%
-  mutate(season = season) %>%
-  dplyr::filter(!season %in% c("2002/2003", "2001/2002"))
-
-ggplot(insos5kdata_filt, aes(x = date_fake, y = season, fill = season)) +
-  geom_joy(scale = 2.0) +
-  scale_x_date(limits = as.Date(c("2002-11-01", "2003-11-01")),
-               date_labels = "%b %d") + theme_joy() +
-  scale_fill_cyclical(values = c("gray80", "gray50")) +
-  ggtitle("Nueva Ecija - Interannual variation of detected SOS")
-```
-
-(This is just a first try: I probably have some error in the grouping, but to give you an
- idea)
-
-That's all for now. I'll continue working on this in the next days. In particular, I plan
-to start working on the Rice Atlas, and also on functions to analyze temporal trends (for
-                                                                                      that, I think we'll have to define some methods for clustering the data, or at least identify
-the main modes in the distribution)

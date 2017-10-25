@@ -45,10 +45,16 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/Data_extraction.html">Processing passages - Data Extraction</a>
+    </li>
+    <li>
       <a href="../articles/processing_summary.html">Processing passages</a>
     </li>
     <li>
       <a href="../articles/RiceAtlas_Comparison.html">RiceAtlas Comparison</a>
+    </li>
+    <li>
+      <a href="../articles/RiceAtlas_Reshuffling.html">RiceAtlas: Checks and Reshuffling of data</a>
     </li>
     <li>
       <a href="../articles/RiceAtlas_Work.html">RiceAtlas - Questions and proposals for processing</a>
@@ -86,12 +92,12 @@
     
 <div class="contents">
 <p>Here I am going to document the passages required to compare PhenoRice results with RiceAtlas</p>
-<div id="preprocessing" class="section level2">
+<div id="preprocessing" class="section level1">
+<h1 class="hasAnchor">
+<a href="#preprocessing" class="anchor"></a>Preprocessing</h1>
+<div id="select-an-area" class="section level2">
 <h2 class="hasAnchor">
-<a href="#preprocessing" class="anchor"></a>Preprocessing</h2>
-<div id="select-an-area" class="section level3">
-<h3 class="hasAnchor">
-<a href="#select-an-area" class="anchor"></a>Select an area</h3>
+<a href="#select-an-area" class="anchor"></a>Select an area</h2>
 <p>For simlpicity, let’s work on a selected area (in this case, the Philippines) (for Bhogendra: I created a folder structure containing all required input data. It would be good if you could replicate it on your machine so that we can more easily share the code)</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># This is the main folder containing preprocessed PhenoRice global mosaics</span>
 <span class="co"># in the form of multiband TIFF images for each parameter (in "/orig"), as </span>
@@ -110,16 +116,20 @@ boundmask   &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span 
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Extract PhenoRice data for the PHL subset area - cropped and masked results are </span>
 <span class="co"># placed in "prasia/Data/Subsets/PHL"</span>
 
-<span class="kw"><a href="../reference/extract_subarea.html">extract_subarea</a></span>(mosaic_folder,
+<span class="kw"><a href="../reference/pr_extract_subarea.html">pr_extract_subarea</a></span>(mosaic_folder,
                 boundmask,
                 subset_name,
                 <span class="dt">out_folder  =</span> subsets_folder)
 
 <span class="co">#Extract RiceAtlas data for PHL</span></code></pre></div>
+</div>
+<div id="visualize-data" class="section level2">
+<h2 class="hasAnchor">
+<a href="#visualize-data" class="anchor"></a>Visualize data</h2>
 <p>Extract and visualize rice atlas data for an area and “variable - in this case”Peak" planting date.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_txt &lt;-<span class="st"> "/home/lb/my_data/prasia/various/NormalizedDB.txt"</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_txt &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/vector/NormalizedDB.txt"</span>
 in_riceatlas_shp =<span class="st"> "/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp"</span>
-riceatlas_phl &lt;-<span class="st"> </span><span class="kw"><a href="../reference/read_riceatlas.html">read_riceatlas</a></span>(in_txt, in_riceatlas_shp, <span class="st">"PHL"</span>)
+riceatlas_phl &lt;-<span class="st"> </span><span class="kw"><a href="../reference/pr_read_riceatlas.html">read_riceatlas</a></span>(in_txt, in_riceatlas_shp, <span class="st">"PHL"</span>)
 peak_plant_s1 &lt;-<span class="st"> </span><span class="kw">subset</span>(riceatlas_phl, Pheno_stage <span class="op">==</span><span class="st"> "plant_st1"</span>)
 <span class="kw">plot_vect</span>(peak_plant_s1, <span class="dt">fill_var =</span> <span class="st">"Peak"</span>, <span class="dt">palette_name =</span> <span class="st">"RdYlGn"</span>)</code></pre></div>
 <p><img src="RiceAtlas_Comparison_files/figure-html/unnamed-chunk-2-1.png" width="672"></p>
@@ -127,7 +137,7 @@ peak_plant_s1 &lt;-<span class="st"> </span><span class="kw">subset</span>(ricea
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(peak_plant_s1, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">doytodate</span>(Peak, <span class="dv">2005</span>))) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="dv">15</span>, <span class="dt">fill =</span> <span class="st">"darkgrey"</span>, <span class="dt">color =</span> <span class="st">"black"</span>) <span class="op">+</span>
 <span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">limits =</span> <span class="kw">doytodate</span>(<span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">365</span>), <span class="dv">2005</span>) ,
-              <span class="dt">date_labels =</span> <span class="st">"%b"</span>) <span class="op">+</span><span class="st"> </span>
+               <span class="dt">date_labels =</span> <span class="st">"%b"</span>) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">theme_bw</span>() 
 p</code></pre></div>
 <p><img src="RiceAtlas_Comparison_files/figure-html/unnamed-chunk-3-1.png" width="672"> Looking at the original table of the <code>rice_production_v1</code> shapefile, this is confirmed (i.e., it is not a data conversion problem). <strong>The “correct” dates for the Wet Season of the offending polygons is instead reported in this case in “plant_st_2”</strong>:</p>
@@ -169,7 +179,40 @@ knitr<span class="op">::</span><span class="kw"><a href="http://www.rdocumentati
 </table>
 <p>You can see that <strong>the two seasons are “reversed” in Leyte</strong>. The problem is that if these kind of errors are “widespread” among the DB, then making the comparisons with PhenoRice may be difficult.</p>
 <p>Additionally, <strong>comparing the <code>rice_production_v1</code> and <code>rice_calendar</code> data show inconsistencies</strong>. For example, in <code>rice_calendar</code>, South Leyte polygon has correct data, while in <code>rice_production_v1</code> they are wrong. However, though in general the other polygons have similar values, they are not identical.</p>
-<p>Fianlly, another problem is that, as in original PhenoRice outputs, <strong>the DOYs are not “decircularized”</strong>. This makes things difficult because area with the same calendar can have for example “peak date” for planting equal to 360 or 10. I will have to think of a way to solve this problem, if we wish to compare PhenoRice with RiceAtlas.</p>
+<p>Finally, another problem is that, as in original PhenoRice outputs, <strong>the DOYs are not “decircularized”</strong>. This makes things difficult because area with the same calendar can have for example “peak date” for planting equal to 360 or 10. I will have to think of a way to solve this problem, if we wish to compare PhenoRice with RiceAtlas.</p>
+<div id="update-after-bhogendra-reprocessing-of-riceatlas-data" class="section level3">
+<h3 class="hasAnchor">
+<a href="#update-after-bhogendra-reprocessing-of-riceatlas-data" class="anchor"></a>Update after Bhogendra reprocessing of riceAtlas data</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_txt &lt;-<span class="st"> "/home/lb/my_data/prasia/Data/vector/NormalizedDB_Asia_new.txt"</span>
+in_riceatlas_shp =<span class="st"> "/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp"</span>
+riceatlas_phl &lt;-<span class="st"> </span><span class="kw"><a href="../reference/pr_read_riceatlas.html">read_riceatlas</a></span>(in_txt, in_riceatlas_shp, <span class="st">"PHL"</span>)
+peak_plant_s1 &lt;-<span class="st"> </span><span class="kw">subset</span>(riceatlas_phl, Pheno_stage <span class="op">==</span><span class="st"> "plant_st1"</span>)
+<span class="kw">plot_vect</span>(peak_plant_s1, <span class="dt">fill_var =</span> <span class="st">"Peak"</span>, <span class="dt">palette_name =</span> <span class="st">"RdYlGn"</span>)</code></pre></div>
+<p><img src="RiceAtlas_Comparison_files/figure-html/unnamed-chunk-5-1.png" width="672"></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">riceatlas_phl <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(Sub_region, N_seasons, Season, Pheno_stage, Start, Peak, End)</code></pre></div>
+<pre><code>## Simple feature collection with 492 features and 7 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 116.9283 ymin: 4.58694 xmax: 126.6054 ymax: 19.96611
+## epsg (SRID):    4326
+## proj4string:    +proj=longlat +datum=WGS84 +no_defs
+## # A tibble: 492 x 8
+##           Sub_region N_seasons Season Pheno_stage Start  Peak   End
+##                &lt;chr&gt;     &lt;int&gt;  &lt;chr&gt;       &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+##  1 Mountain Province         2    Wet   plant_st1   105   181   258
+##  2 Mountain Province         2    Dry   plant_st2   349   365    46
+##  3 Mountain Province         2   &lt;NA&gt;   plant_st3     0     0     0
+##  4 Mountain Province         2    Wet    harv_st1   227   304    15
+##  5 Mountain Province         2    Dry    harv_st2   105   120   166
+##  6 Mountain Province         2   &lt;NA&gt;    harv_st3     0     0     0
+##  7 Negros Occidental         2   &lt;NA&gt;   plant_st1   319    15    74
+##  8 Negros Occidental         2   &lt;NA&gt;   plant_st2   135   196   258
+##  9 Negros Occidental         2   &lt;NA&gt;   plant_st3     0     0     0
+## 10 Negros Occidental         2   &lt;NA&gt;    harv_st1    46   105   135
+## # ... with 482 more rows, and 1 more variables: geometry &lt;simple_feature&gt;</code></pre>
+<p>Problem is evidently related to not accounting for circular nature of DOY.</p>
+</div>
 </div>
 </div>
 </div>
@@ -179,10 +222,8 @@ knitr<span class="op">::</span><span class="kw"><a href="http://www.rdocumentati
         <div id="tocnav">
       <h2 class="hasAnchor">
 <a href="#tocnav" class="anchor"></a>Contents</h2>
-      <ul class="nav nav-pills nav-stacked">
-<li><a href="#preprocessing">Preprocessing</a></li>
-      </ul>
-</div>
+      true
+    </div>
       </div>
 
 </div>

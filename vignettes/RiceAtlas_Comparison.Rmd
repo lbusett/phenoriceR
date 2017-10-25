@@ -77,7 +77,7 @@ Extract and visualize rice atlas data for an area and "variable -  in this case
 "Peak" planting date. 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
-in_txt <- "/home/lb/my_data/prasia/various/NormalizedDB.txt"
+in_txt <- "/home/lb/my_data/prasia/Data/vector/NormalizedDB.txt"
 in_riceatlas_shp = "/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp"
 riceatlas_phl <- read_riceatlas(in_txt, in_riceatlas_shp, "PHL")
 peak_plant_s1 <- subset(riceatlas_phl, Pheno_stage == "plant_st1")
@@ -129,7 +129,7 @@ PhenoRice with RiceAtlas.
 ### Update after Bhogendra reprocessing of riceAtlas data
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
-in_txt <- "/home/lb/my_data/prasia/various/NormalizedDB_Asia_new.txt"
+in_txt <- "/home/lb/my_data/prasia/Data/vector/NormalizedDB_Asia_new.txt"
 in_riceatlas_shp = "/home/lb/my_data/prasia/Data/vector/Ricetlas/riceatlas_asia.shp"
 riceatlas_phl <- read_riceatlas(in_txt, in_riceatlas_shp, "PHL")
 peak_plant_s1 <- subset(riceatlas_phl, Pheno_stage == "plant_st1")
@@ -143,146 +143,3 @@ riceatlas_phl %>%
 
 ```
 Problem is evidently related to not accounting for circular nature of DOY. 
-
-### Further reshaping of riceatlas data
-
-Reshape a bit the dataset: 
-
-```{r reshape_data, echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE}
-
-# Reshape a bit the dataset
-in_atlas <- read.csv2(in_txt) %>% 
-  # split columns
-  tidyr::separate(Pheno_stage, c("Stage", "season"), "_st") %>% 
-  # remove empty rows
-  dplyr::filter((Start != 0 | Peak != 0 | End != 0)) %>% 
-  # create unique name
-  dplyr::mutate(reg_name = paste(ISO, Region, Sub_region)) %>% 
-  dplyr::mutate(reg_name = stringr::str_replace(reg_name, "NA", "")) %>% 
-  # Rename and reorder
-  dplyr::select(Objectid, ISO, reg_name, N_seasons, season, 
-                Stage, Start, Peak, End, Total_area, Seasonal_area, 
-                Seasonal_production, Season, Country, Region, Sub_region) %>% 
-  dplyr::rename(cty = ISO, N_seas = N_seasons, Seas_name = Season, Season = season,
-                Seas_area = Seasonal_area , Seas_prod = Seasonal_production, 
-                Tot_area = Total_area) %>% 
-  dplyr::mutate(Stage = factor(Stage, 
-                               levels = c("plant", "harv"), 
-                               labels = c("Planting","Harvesting"))) %>% 
-  tibble::as_tibble()
-names(in_atlas)[1] = "OBJECTID"
-
-in_atlas
-```
-
-Now let's compute the differences in the Start/Peak/End columns and check their 
-distribution: 
-
-```{r}
-
-in_atlas <- in_atlas %>% 
-  dplyr::mutate(endstart_lgt  = (End - Start), 
-                peakstart_lgt = (Peak - Start),
-                endpeak_lgt   = (End - Peak)
-  ) %>% 
-  dplyr::select(1:9, endstart_lgt, peakstart_lgt, endpeak_lgt, everything())
-
-p <- ggplot(in_atlas) + 
-  geom_jitter(aes(x = "", y = endstart_lgt), size = 0.4, alpha = 0.5) + 
-  facet_wrap(~Stage) + theme_bw()
-p + ggtitle("Distribution of the differences between End and Start in riceatlas")
-
-p <- ggplot(in_atlas) + 
-  geom_jitter(aes(x = "", y = peakstart_lgt), size = 0.4, alpha = 0.5) + 
-  facet_wrap(~Stage) + theme_bw()
-p + ggtitle("Distribution of the differences between Peak and Start in riceatlas")
-
-p <- ggplot(in_atlas) + 
-  geom_jitter(aes(x = "", y = endpeak_lgt), size = 0.4, alpha = 0.5) + 
-  facet_wrap(~Stage) + theme_bw()
-p + ggtitle("Distribution of the differences between End and Peak in riceatlas")
-```
-
-From this, it is obvious that the dataset is generally coherent, but also that in some cases the Start/Peak/End values do not account for "circularity". Therefore we can have cases such as:
-- `Start = 354 ,Peak = 3, End = 18` --> `End <=Start` and `Peak <= Start` --> leading to negative outliers
-- `Start = 4, Peak = 292, End = 34` --> `End <=Start` and `Peak <= Start` --> leading to positive outliers
-
-, plus other less common problems (e.g., `Start = 32 ,Peak = 32, End = 0`,
-`Start = 213 ,Peak = 227, End = 213`, `Start = 277, Peak = 19, End = 307`), as well
-as obvious mistakes (e.g., `Start = 74, Peak = 74, End = 196`)
-
-I tried to automatically fix, first of all, the more common problems: 
-
-```{r}
-
-out_atlas <- in_atlas %>%
-  # add 365 to End/Peak where differences are negative
-  lbscripts::mutate_when((endstart_lgt < 0 & endstart_lgt < 0), 
-                         list(End = End + 365)) %>%
-  # re-create the diffs for test purposes
-  dplyr::mutate(endstart_lgt = (End - Start),
-                peakstart_lgt = (Peak - Start), 
-                endpeak_lgt   = (End - Peak)) %>% 
-  lbscripts::mutate_when((endpeak_lgt > 250 & peakstart_lgt < -250), 
-                         list(Start = Start - 365, 
-                              End   = End - 365)) %>% 
-  # re-create the diffs for test purposes
-  dplyr::mutate(endstart_lgt = (End - Start),
-                peakstart_lgt = (Peak - Start), 
-                endpeak_lgt   = (End - Peak)) %>% 
-  
-  lbscripts::mutate_when(endpeak_lgt > 300, 
-                         list(End   = End - 365))%>% 
-  # re-create the diffs for test purposes
-  dplyr::mutate(endstart_lgt = (End - Start),
-                peakstart_lgt = (Peak - Start), 
-                endpeak_lgt   = (End - Peak)) 
-
-p <- ggplot(out_atlas) + 
-  geom_jitter(aes(x = "", y = endstart_lgt), size = 0.4, alpha = 0.5) + 
-  facet_wrap(~Stage) + theme_bw()
-p + ggtitle("Distribution of the differences between End and Start in riceatlas")
-
-p <- ggplot(out_atlas) + 
-  geom_jitter(aes(x = "", y = peakstart_lgt), size = 0.4, alpha = 0.5) + 
-  facet_wrap(~Stage) + theme_bw()
-p + ggtitle("Distribution of the differences between Peak and Start in riceatlas")
-
-write.table(out_atlas,
-           file = "/home/lb/my_data/prasia/various/NormalizedDB_Asia_temp.txt", 
-           sep = "  ",
-          row.names = FALSE)
-
-```
-
-Ok. Now we are in much better shape (We can fix the last inconsistencies by
-hand). Now let's work on assigning all homogenizing assignment to "Season Number". 
-Let's use the PHL example again for testing. 
-```{r}
-
-in_txt <- "/home/lb/my_data/prasia/various/NormalizedDB_Asia_temp.txt"
-riceatlas_phl <- read_riceatlas(in_txt, in_riceatlas_shp, "PHL") 
-riceatlas_phl
-
-```
-
-We first have to reconcile so that on "seasons" spanning the end of the year 
-we either always use  `-15, 0, 15`  OR `355, 365, 375`. I decide for the latter
-because the negatives can bring in trouble later. Thertefore, I check to see
-if there is any negative number in "Start" or "Peak" and add 365 
-
-```{r}
-
-out_riceatlas_phl <- riceatlas_phl %>% 
-  lbscripts::mutate_when((Start < 0 & End > 0), 
-                         list(Start = Start + 365, 
-                              Peak  = Peak + 365), 
-                              End = End +365) %>% 
-  lbscripts::mutate_when((Peak < 0 & End > 0), 
-                         list(Peak = Peak + 365)) 
-
-```
-
-
-peak_plant_s1 <- subset(riceatlas_phl, Stage == "Planting" & Season == 1)
-plot_vect(peak_plant_s1, fill_var = "Peak", palette_name = "RdYlGn")

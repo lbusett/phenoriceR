@@ -68,6 +68,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/Data_extraction.html">Processing passages - Data Extraction</a>
+    </li>
+    <li>
       <a href="../articles/processing_summary.html">Processing passages</a>
     </li>
     <li>
@@ -153,7 +156,7 @@
  <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sf/topics/st_as_sf'>st_as_sf</a></span>() <span class='kw'>%&gt;%</span>
  <span class='kw pkg'>dplyr</span><span class='kw ns'>::</span><span class='fu'><a href='http://dplyr.tidyverse.org/reference/filter.html'>filter</a></span>(<span class='no'>NAME_1</span> <span class='kw'>==</span> <span class='st'>"Nueva Ecija"</span>) <span class='kw'>%&gt;%</span>
  <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sf/topics/geos_combine'>st_combine</a></span>()
- <span class='fu'>extract_subarea</span>(<span class='no'>mosaic_folder</span>,
+ <span class='fu'>pr_extract_subarea</span>(<span class='no'>mosaic_folder</span>,
                 <span class='no'>boundmask</span>,
                 <span class='no'>subset_name</span>,
                 <span class='no'>out_folder</span>)

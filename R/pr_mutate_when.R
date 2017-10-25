@@ -1,4 +1,4 @@
-#' @title mutate_when
+#' @title pr_mutate_when
 #' @description mutate a column within a dplyr pype only on a subset of rows
 #'   specified by a condition
 #'   Retrieved from a StackOverflow answer (https://stackoverflow.com/a/34170176/6871135)
@@ -14,7 +14,7 @@
 #'             disp == 160, list(cyl = 200))
 #'
 #' }
-#' @rdname mutate_when
+#' @rdname pr_mutate_when
 #' @export
 #' @author Kevin Ushey
 
