@@ -29,14 +29,12 @@
 #' @importFrom stringr str_split_fixed
 #'
 pr_extract_subarea <- function(in_mosaics_folder,
-                            in_mask,
-                            subset_name,
-                            out_folder,
-                            what = c("decirc", "orig")) {
+                               in_mask,
+                               out_folder,
+                               what = c("decirc", "orig")) {
   #   ____________________________________________________________________________
   #   Mask and save (this will become a function in the future)            ####
 
-  out_folder <- file.path(out_folder, subset_name)
 
   for (type in what) {
 
@@ -54,19 +52,19 @@ pr_extract_subarea <- function(in_mosaics_folder,
     in_vars      <- stringr::str_split_fixed(basename(in_RData), "_",2)[,1]
 
     for (file in seq_along(in_RData)) {
-
-      message("extract_subarea --> Extracting: `", in_vars[file], "` data on: `", subset_name,
-              "` Please Wait !")
       in_rast   <- get(load(in_RData[file]))
       if (type == "orig") {
-      out_tiff  <- file.path(out_folder_2, paste0(in_vars[file], ".tif"))
-      out_RData <- file.path(out_folder_2, paste0(in_vars[file], ".RData"))
+        out_tiff  <- file.path(out_folder_2, paste0(in_vars[file], ".tif"))
+        out_RData <- file.path(out_folder_2, paste0(in_vars[file], ".RData"))
+        var  <- in_vars[file]
       } else{
         out_tiff  <- file.path(out_folder_2, paste0(in_vars[file], "_decirc.tif"))
         out_RData <- file.path(out_folder_2, paste0(in_vars[file], "_decirc.RData"))
+        var  <- paste0(in_vars[file], "_decirc")
       }
-      if (!file.exists(out_tiff)) {
 
+      if (!file.exists(out_tiff)) {
+        message("extract_subarea --> Extracting: `", var, "` Please Wait !")
         out_rast  <- sprawl::crop_rast(in_rast,
                                        in_mask,
                                        mask      = T,
@@ -77,6 +75,8 @@ pr_extract_subarea <- function(in_mosaics_folder,
         names(out_rast_full) <- names(in_rast)
         out_rast_full        <- raster::setZ(out_rast_full, raster::getZ(out_rast))
         save(out_rast_full, file = out_RData)
+      } else {
+        message("extract_subarea --> ", var, " was already extracted. Skipping!")
       }
     }
   }

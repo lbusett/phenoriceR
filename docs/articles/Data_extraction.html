@@ -94,45 +94,93 @@
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#   ____________________________________________________________________________</span>
 <span class="co">#   set input and output folders                                            ####</span>
 
-<span class="kw">library</span>(sf)
-<span class="kw">library</span>(dplyr)
-<span class="kw">library</span>(sprawl)
+<span class="co"># set the main folder ----</span>
 main_folder &lt;-<span class="st"> "/home/lb/my_data/prasia/Data"</span>
 
-in_shp &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/read_vect">read_vect</a></span>(<span class="kw">file.path</span>(main_folder, 
+<span class="co"># Load the reshuffled shapefile ----</span>
+
+in_shp &lt;-<span class="st"> </span><span class="kw">read_vect</span>(<span class="kw">file.path</span>(main_folder, 
                               <span class="st">"vector/Ricetlas/riceatlas_asia_reshuffled.shp"</span>))
 
+## Set a region for the analysis ----
 Region_name &lt;-<span class="st"> "Region_3_-_Central_Luzon"</span>
 
-in_vect &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(in_shp, Region <span class="op">==</span><span class="st"> </span>Region_name)
+## "1) Get the polygons of a specific region from the shapefile") ----
 
-<span class="co"># Get the polygons of a specific region from the shapefile</span>
+in_vect &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(in_shp, Region <span class="op">==</span><span class="st"> </span>Region_name)
 in_vect &lt;-<span class="st"> </span>in_vect[<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>] <span class="op">%&gt;%</span>
-<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/get_proj4string">get_proj4string</a></span>(
+<span class="st">  </span>sf<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(<span class="kw">get_proj4string</span>(
     <span class="kw">file.path</span>(main_folder,<span class="st">"orig_mosaic/param_series/decirc/eos_decirc.tif"</span>))) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">unique</span>()
+<span class="kw">plot_vect</span>(in_vect, <span class="dt">fill_var =</span> <span class="st">"ID"</span>)</code></pre></div>
+<p><img src="Data_extraction_files/figure-html/unnamed-chunk-1-1.png" width="672"></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="st">"Create cropped rasters and put them in the </span><span class="ch">\"</span><span class="st">subsets</span><span class="ch">\"</span><span class="st"> subfolder"</span>)</code></pre></div>
+<pre><code>## Create cropped rasters and put them in the "subsets" subfolder</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">in_rast_folder  &lt;-<span class="st"> </span><span class="kw">file.path</span>(main_folder, <span class="st">"orig_mosaic/param_series/"</span>)
+out_folder      &lt;-<span class="st"> </span><span class="kw">file.path</span>(main_folder, <span class="st">"subsets"</span>, Region_name)
+<span class="kw">make_folder</span>(out_folder, <span class="dt">type =</span> <span class="st">"dirname"</span>, <span class="dt">verbose =</span> T)
 
-<span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/plot_vect">plot_vect</a></span>(in_vect, <span class="dt">fill_var =</span> <span class="st">"ID"</span>)
-
-mosaic_folder  &lt;-<span class="st"> </span><span class="kw">file.path</span>(main_folder, <span class="st">"orig_mosaic/param_series/"</span>)
-subsets_folder &lt;-<span class="st"> </span><span class="kw">file.path</span>(main_folder, <span class="st">"subsets"</span>)
-<span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/make_folder">make_folder</a></span>(subsets_folder, <span class="dt">type =</span> <span class="st">"dirname"</span>, <span class="dt">verbose =</span> T)
-
-<span class="kw"><a href="../reference/pr_extract_subarea.html">pr_extract_subarea</a></span>(mosaic_folder,
+<span class="kw">message</span>(<span class="st">"Extracting data on "</span>, Region_name)
+<span class="kw"><a href="../reference/pr_extract_subarea.html">pr_extract_subarea</a></span>(in_rast_folder,
                    in_vect,
-                   <span class="dt">subset_name =</span> Region_name,
-                   <span class="dt">out_folder  =</span> subsets_folder)
-in_files &lt;-<span class="st"> </span><span class="kw">list.files</span>(
-  <span class="kw">file.path</span>(subsets_folder, Region_name, <span class="st">"param_series/decirc"</span>),
-  <span class="dt">pattern=</span> <span class="st">"*.RData"</span>, 
-  <span class="dt">full.names =</span> <span class="ot">TRUE</span>)
+                   <span class="dt">out_folder  =</span> out_folder)
 
+## 2. Extract the data from the different provinces of the region" ----
+
+in_files &lt;-<span class="st"> </span><span class="kw">list.files</span>(
+  <span class="kw">file.path</span>(out_folder, <span class="st">"param_series/decirc"</span>),
+  <span class="dt">pattern =</span> <span class="st">"*.RData"</span>, 
+  <span class="dt">full.names =</span> <span class="ot">TRUE</span>)
+in_files</code></pre></div>
+<pre><code>## [1] "/home/lb/my_data/prasia/Data/subsets/Region_3_-_Central_Luzon/param_series/decirc/eos_decirc.RData"
+## [2] "/home/lb/my_data/prasia/Data/subsets/Region_3_-_Central_Luzon/param_series/decirc/pos_decirc.RData"
+## [3] "/home/lb/my_data/prasia/Data/subsets/Region_3_-_Central_Luzon/param_series/decirc/sos_decirc.RData"</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### test on one file ----
 in_rast &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">load</span>(in_files[<span class="dv">1</span>]))
-raster<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/NAvalue">NAvalue</a></span>(in_rast) &lt;-<span class="st"> </span><span class="dv">0</span>
+<span class="kw">message</span>(<span class="st">"Working on : "</span>, in_files[<span class="dv">1</span>])
 out &lt;-<span class="st"> </span>sprawl<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/sprawl/topics/extract_rast">extract_rast</a></span>(in_rast,
                      in_vect,
+                     <span class="dt">na.value =</span> <span class="dv">0</span>, 
                      <span class="dt">join_geom =</span> <span class="ot">FALSE</span>, 
-                     <span class="dt">id_field =</span> <span class="st">"ID"</span>)</code></pre></div>
+                     <span class="dt">id_field =</span> <span class="st">"ID"</span>, 
+                     <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+out</code></pre></div>
+<pre><code>## $stats
+## # A tibble: 392 x 12
+##         ID band_n       date n_pix n_pix_val      avg   med       sd   min
+##     &lt;fctr&gt;  &lt;dbl&gt;     &lt;date&gt; &lt;int&gt;     &lt;int&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
+##  1 PHL_843      1 2003-01-01 68393        33 1101.455  1100 14.48510  1076
+##  2 PHL_843      2 2003-01-01 68393        84 1239.000  1249 24.55189  1169
+##  3 PHL_843      3 2003-01-01 68393       885 1340.471  1345 28.24250  1257
+##  4 PHL_843      4 2003-01-01 68393       807 1387.587  1385 18.32833  1353
+##  5 PHL_843      5 2004-01-01 68393        56 1479.714  1477 19.81892  1433
+##  6 PHL_843      6 2004-01-01 68393        70 1600.286  1606 27.68411  1534
+##  7 PHL_843      7 2004-01-01 68393       700 1687.131  1686 27.46557  1622
+##  8 PHL_843      8 2004-01-01 68393       619 1758.388  1750 23.07280  1718
+##  9 PHL_843      9 2005-01-01 68393        42 1845.095  1839 18.26073  1815
+## 10 PHL_843     10 2005-01-01 68393        17 1953.176  1948 24.32138  1924
+## # ... with 382 more rows, and 3 more variables: max &lt;dbl&gt;, OBJECTI &lt;dbl&gt;,
+## #   cty &lt;fctr&gt;
+## 
+## $alldata
+## # A tibble: 638,940 x 8
+##         ID band_n       date n_pix_val     N value OBJECTI    cty
+##     &lt;fctr&gt;  &lt;int&gt;     &lt;date&gt;     &lt;int&gt; &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;fctr&gt;
+##  1 PHL_843      1 2003-01-01        33     1  1124     843    PHL
+##  2 PHL_843      1 2003-01-01        33     2  1084     843    PHL
+##  3 PHL_843      1 2003-01-01        33     3  1092     843    PHL
+##  4 PHL_843      1 2003-01-01        33     4  1084     843    PHL
+##  5 PHL_843      1 2003-01-01        33     5  1084     843    PHL
+##  6 PHL_843      1 2003-01-01        33     6  1108     843    PHL
+##  7 PHL_843      1 2003-01-01        33     7  1108     843    PHL
+##  8 PHL_843      1 2003-01-01        33     8  1108     843    PHL
+##  9 PHL_843      1 2003-01-01        33     9  1092     843    PHL
+## 10 PHL_843      1 2003-01-01        33    10  1100     843    PHL
+## # ... with 638,930 more rows</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## 3. Save results as an RData file for future use" ----
+<span class="kw">make_folder</span>(<span class="kw">file.path</span>(out_folder, <span class="st">"RData"</span>))
+<span class="kw">save</span>(out, <span class="dt">file =</span> <span class="kw">file.path</span>(out_folder, <span class="st">"RData"</span>,
+                           <span class="kw">paste</span>(Region_name, <span class="st">"stats.RData"</span>, <span class="dt">sep =</span> <span class="st">"_"</span>)))</code></pre></div>
 </div>
   </div>
 
