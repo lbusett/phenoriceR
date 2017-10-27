@@ -1,25 +1,42 @@
 #' @title FUNCTION_TITLE
 #' @description FUNCTION_DESCRIPTION
-#' @param in_mosaics_folder PARAM_DESCRIPTION
-#' @param in_mask PARAM_DESCRIPTION
-#' @param subset_name PARAM_DESCRIPTION
-#' @param out_folder PARAM_DESCRIPTION
-#' @return OUTPUT_DESCRIPTION
-#' @details DETAILS
+#' @param in_mosaics_folder folder containing the tiff and RData mosaics.
+#'   (e.g., "/home/lb/my_data/prasia/Data/orig_mosaics")
+#' @param in_mask polygon on to which data should be extracted
+#' @param out_folder folder where results should be stored
+#' @return Cropped reasters are saved in the specified output folder.
 #' @examples
 #' \dontrun{
-#'  mosaic_folder <- "/home/lb/my_data/prasia/mosaics/ordered"
-#'  out_folder  <- "/home/lb/my_data/prasia/mosaics/ordered/subsets/"
-#'  subset_name <- "Nueva_Ecija"
-#'  in_country  <- "PHL"
-#'  boundmask   <- sprawl::get_boundaries(in_country, level = 1) %>%
-#'  sf::st_as_sf() %>%
-#'  dplyr::filter(NAME_1 == "Nueva Ecija") %>%
-#'  sf::st_combine()
+#'  main_folder <- "/home/lb/my_data/prasia/Data"
+#'  mosaic_folder <- "/home/lb/my_data/prasia/Data/orig_mosaics"
+
+#'  in_shp <- read_vect(file.path(main_folder, "vector/Ricetlas/riceatlas_asia_reshuffled.shp"))
+#'
+#'  # Suppose you want to extract data for Region: "Region_3_-_Central_Luzon" :
+#'  # --> extract it from the full shapefile
+#'
+#'  Region_name <- ""Region_3_-_Central_Luzon""
+#'
+#'  in_mask <- dplyr::filter(in_shp, Region == Region_name)
+#'  in_mask <- unique(in_mask[1:4]) # this is needed to remove duplicate polygons
+#'  in_mask
+#'  plot_vect(in_mask, fill_var = "ID_name")
+#'
+#'  # in_mask contains one polygon for each sub_region of "Region_3_-_Central_Luzon"
+#'
+#'  # Define the output folder
+#'  out_folder  <- file.path("/home/lb/my_data/prasia/mosaics/ordered/subsets/",
+#'    Region_name)
+#'  out_folder
+#'
+#'  # you have all you need: location of the mosaic rasters, a vector where to
+#'  # cut and an output folder
+#'
 #'  pr_extract_subarea(mosaic_folder,
-#'                 boundmask,
-#'                 subset_name,
+#'                 in_mask,
 #'                 out_folder)
+#'
+#'  # You will find the cropped rasters in "out_folder"
 #'  }
 #' @rdname pr_extract_subarea
 #' @export

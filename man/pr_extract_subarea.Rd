@@ -4,16 +4,17 @@
 \alias{pr_extract_subarea}
 \title{FUNCTION_TITLE}
 \usage{
-pr_extract_subarea(in_mosaics_folder, in_mask, subset_name, out_folder)
+pr_extract_subarea(in_mosaics_folder, in_mask, out_folder, what = c("decirc",
+  "orig"))
 }
 \arguments{
 \item{in_mosaics_folder}{PARAM_DESCRIPTION}
 
 \item{in_mask}{PARAM_DESCRIPTION}
 
-\item{subset_name}{PARAM_DESCRIPTION}
-
 \item{out_folder}{PARAM_DESCRIPTION}
+
+\item{subset_name}{PARAM_DESCRIPTION}
 }
 \value{
 OUTPUT_DESCRIPTION
