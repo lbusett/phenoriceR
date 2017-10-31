@@ -81,13 +81,22 @@ pr_extract_subarea <- function(in_mosaics_folder,
       }
 
       if (!file.exists(out_tiff)) {
+
+        if (var %in% c("totlgt", "veglgt", "nseas")) {
+          out_nodata <- 255
+        } else {
+          out_nodata <- 32767
+        }
         message("extract_subarea --> Extracting: `", var, "` Please Wait !")
         out_rast  <- sprawl::crop_rast(in_rast,
                                        in_mask,
                                        mask      = T,
                                        out_type  = "rastobject",
                                        out_file  = out_tiff,
-                                       compress  = "DEFLATE")
+                                       compress  = "DEFLATE",
+                                       out_nodata = out_nodata,
+                                       parallel = TRUE,
+                                       verbose  = FALSE)
         out_rast_full        <- sprawl::read_rast(out_tiff)
         names(out_rast_full) <- names(in_rast)
         out_rast_full        <- raster::setZ(out_rast_full, raster::getZ(out_rast))

@@ -68,6 +68,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/Data_extraction_simplified.html">Processing passages - Data Extraction Simplified</a>
+    </li>
+    <li>
       <a href="../articles/Data_extraction.html">Processing passages - Data Extraction</a>
     </li>
     <li>
@@ -114,54 +117,66 @@
     <p>FUNCTION_DESCRIPTION</p>
     
 
-    <pre class="usage"><span class='fu'>pr_extract_subarea</span>(<span class='no'>in_mosaics_folder</span>, <span class='no'>in_mask</span>, <span class='no'>subset_name</span>, <span class='no'>out_folder</span>)</pre>
+    <pre class="usage"><span class='fu'>pr_extract_subarea</span>(<span class='no'>in_mosaics_folder</span>, <span class='no'>in_mask</span>, <span class='no'>out_folder</span>, <span class='kw'>what</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"decirc"</span>,
+  <span class='st'>"orig"</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>in_mosaics_folder</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
+      <td><p>folder containing the tiff and RData mosaics.
+(e.g., "/home/lb/my_data/prasia/Data/orig_mosaics")</p></td>
     </tr>
     <tr>
       <th>in_mask</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
-    </tr>
-    <tr>
-      <th>subset_name</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
+      <td><p>polygon on to which data should be extracted</p></td>
     </tr>
     <tr>
       <th>out_folder</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
+      <td><p>folder where results should be stored</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>OUTPUT_DESCRIPTION</p>
-    
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>DETAILS</p>
+    <p>Cropped reasters are saved in the specified output folder.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><span class='co'># NOT RUN {</span>
- <span class='no'>mosaic_folder</span> <span class='kw'>&lt;-</span> <span class='st'>"/home/lb/my_data/prasia/mosaics/ordered"</span>
- <span class='no'>out_folder</span>  <span class='kw'>&lt;-</span> <span class='st'>"/home/lb/my_data/prasia/mosaics/ordered/subsets/"</span>
- <span class='no'>subset_name</span> <span class='kw'>&lt;-</span> <span class='st'>"Nueva_Ecija"</span>
- <span class='no'>in_country</span>  <span class='kw'>&lt;-</span> <span class='st'>"PHL"</span>
- <span class='no'>boundmask</span>   <span class='kw'>&lt;-</span> <span class='kw pkg'>sprawl</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sprawl/topics/get_boundaries'>get_boundaries</a></span>(<span class='no'>in_country</span>, <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>1</span>) <span class='kw'>%&gt;%</span>
- <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sf/topics/st_as_sf'>st_as_sf</a></span>() <span class='kw'>%&gt;%</span>
- <span class='kw pkg'>dplyr</span><span class='kw ns'>::</span><span class='fu'><a href='http://dplyr.tidyverse.org/reference/filter.html'>filter</a></span>(<span class='no'>NAME_1</span> <span class='kw'>==</span> <span class='st'>"Nueva Ecija"</span>) <span class='kw'>%&gt;%</span>
- <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/sf/topics/geos_combine'>st_combine</a></span>()
- <span class='fu'>pr_extract_subarea</span>(<span class='no'>mosaic_folder</span>,
-                <span class='no'>boundmask</span>,
-                <span class='no'>subset_name</span>,
-                <span class='no'>out_folder</span>)
+    <pre class="examples"># NOT RUN {
+ main_folder <- "/home/lb/my_data/prasia/Data"
+ mosaic_folder <- "/home/lb/my_data/prasia/Data/orig_mosaics"
+ in_shp <- read_vect(file.path(main_folder, "vector/Ricetlas/riceatlas_asia_reshuffled.shp"))
 
-<span class='co'># }</span></pre>
+ # Suppose you want to extract data for Region: "Region_3_-_Central_Luzon" :
+ # --> extract it from the full shapefile
+
+ Region_name <- ""Region_3_-_Central_Luzon""
+
+ in_mask <- dplyr::filter(in_shp, Region == Region_name)
+ in_mask <- unique(in_mask[1:4]) # this is needed to remove duplicate polygons
+ in_mask
+ plot_vect(in_mask, fill_var = "ID_name")
+
+ # in_mask contains one polygon for each sub_region of "Region_3_-_Central_Luzon"
+
+ # Define the output folder
+ out_folder  <- file.path("/home/lb/my_data/prasia/mosaics/ordered/subsets/",
+   Region_name)
+ out_folder
+
+ # you have all you need: location of the mosaic rasters, a vector where to
+ # cut and an output folder
+
+ pr_extract_subarea(mosaic_folder,
+                in_mask,
+                out_folder)
+
+ # You will find the cropped rasters in "out_folder"
+ 
+# }
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -169,8 +184,6 @@
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
-
-      <li><a href="#details">Details</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>FUNCTION_TITLE — pr_extract_idl_outs • phenoriceR</title>
+<title>pr_extract — pr_extract • phenoriceR</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -110,56 +110,58 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>FUNCTION_TITLE</h1>
+    <h1>pr_extract</h1>
     </div>
 
     
-    <p>FUNCTION_DESCRIPTION</p>
+    <p>Extract data from PhenoRice mosaics</p>
     
 
-    <pre class="usage"><span class='fu'>pr_extract_idl_outs</span>(<span class='no'>in_folder</span>, <span class='no'>out_folder</span>, <span class='no'>start_year</span>, <span class='no'>end_year</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>pr_extract</span>(<span class='no'>main_folder</span>, <span class='no'>region</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>in_folder</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
+      <th>main_folder</th>
+      <td><p>location of the "Data" folder (e.g., "/home/lb/my_data/prasia/Data")</p></td>
     </tr>
     <tr>
-      <th>out_folder</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
-    </tr>
-    <tr>
-      <th>start_year</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
-    </tr>
-    <tr>
-      <th>end_year</th>
-      <td><p>PARAM_DESCRIPTION</p></td>
-    </tr>
-    <tr>
-      <th>overwrite</th>
-      <td><p>PARAM_DESCRIPTION, Default: FALSE</p></td>
+      <th>region</th>
+      <td><p>region to extract(e.g., "Region_3_-<em>Central_Luzon").
+If "All", all regions are extracted. Multoiple values
+are possible. (e.g., region = c("Region_3</em>-_Central_Luzon", "Chippalonga"))</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>OUTPUT_DESCRIPTION</p>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+<ul>
+<li><p>Cropped rasters are stored in the <code>Data/subsets/_region_name_/orig</code> and
+<code>Data/subsets/_region_name_/decirc</code> folders. #'</p></li>
+<li><p>Extracted data are saved in the <code>Data/subsets/_region_name_/RData</code> folder. One
+separate RData file is created for each PhenoRice parameter (e.g., "Dhaka_sos_stats.RData",
+"Dhaka_eos_stats.RData", "Dhaka_sos_decirc_stats.RData")</p></li>
+</ul>
 
-    <p>DETAILS</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><span class='co'># NOT RUN {</span>
-<span class='kw'>if</span>(<span class='fu'>interactive</span>()){
- <span class='co'>#EXAMPLE1</span>
- }
-<span class='co'># }</span></pre>
+<span class='co'># set the main folder ----</span>
+<span class='no'>main_folder</span> <span class='kw'>&lt;-</span> <span class='st'>"/home/lb/my_data/prasia/Data"</span>
+
+<span class='co'># Suppose you want to extract data for Region: "Region_3_-_Central_Luzon" :</span>
+<span class='co'># --&gt; extract it from the full shapefile</span>
+<span class='no'>Region_name</span> <span class='kw'>&lt;-</span> <span class='st'>"Region_3_-_Central_Luzon"</span>
+
+<span class='co'># "1) run "pr_extract" on the region ----</span>
+
+<span class='fu'>pr_extract</span>(<span class='no'>main_folder</span>,
+          <span class='kw'>region</span> <span class='kw'>=</span> <span class='no'>Region_name</span>)
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -167,8 +169,6 @@
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
-
-      <li><a href="#details">Details</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

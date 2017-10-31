@@ -1,0 +1,209 @@
+---
+title: "Processing passages - Data Extraction Simplified"
+output:
+  html_document:
+  highlight: pygments
+theme: journal
+toc: yes
+toc_depth: 2
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(tibble)
+options(tibble.print_max = Inf) 
+options(dplyr.width = Inf)
+```
+
+This page documents the passages required to extract PhenoRice results for the 
+different polygons of the RiceAtlas dataset. Input data are the raster mosaics
+stored in `Data/orig_mosaics`, and the reshuffled riceAtlas shapefile stored 
+in `Data/vector/Ricetlas/riceatlas_asia_reshuffled.shp`
+
+# Extract data for a specific RiceAtlas region
+
+Suppose you want to extract data for Region: "Region_3_-_Central_Luzon":  
+
+```{r  message=FALSE, warning=FALSE, eval=FALSE}
+#   ____________________________________________________________________________
+#   set input and output folders                                            ####
+
+# set the main folder ----
+main_folder <- "/home/lb/my_data/prasia/Data"
+
+#'  # Suppose you want to extract data for Region: "Region_3_-_Central_Luzon" :
+#'  # --> extract it from the full shapefile
+
+Region_name <- "Region_3_-_Central_Luzon"
+
+## "1) run "pr_extract" on the region ----
+
+pr_extract(main_folder,
+           region = Region_name)
+
+```
+
+__NOTE:__ Using `region = "All"` will automatically process all RiceAtlas regions. 
+
+The function crops the original mosaics on the selected region, and then extracts
+the data for the different sub-regions of the specified RiceAtlas regions. 
+
+- Cropped rasters are stored in the `Data/subsets/_region_name_/orig` and
+`Data/subsets/_region_name_/decirc` folders. 
+
+- Extracted data are saved in the `Data/subsets/_region_name_/RData` folder. One
+separate RData file is created for each PhenoRice parameter (e.g., 
+"Dhaka_sos_stats.RData", "Dhaka_eos_stats.RData", "Dhaka_sos_decirc_stats.RData")
+
+# Accessing the extracted data
+
+Extracted data can be successively accessed by loading the saved RData files. Here I show it 
+for the "sos" dataset of "Central_luzon". 
+
+```{r}
+
+main_folder <- "/home/lb/my_data/prasia/Data"
+indata <- get(load(file.path(main_folder,
+                             "subsets/Region_3_-_Central_Luzon/RData/Region_3_-_Central_Luzon_sos_stats.RData")))
+
+```
+The data is saved as a list containing two elements:
+
+1) **`indata$alldata`** contains "raw" info extracted __from all pixels__ of the selected
+region that were recognized as "rice" in the different years: 
+
+```{r}
+
+head(indata$alldata)
+
+```
+It contains the following columns: 
+
+-  __ID_name__  : Name of RiceAtlas polygon 
+-  __variable__ : PhenoRice variable      
+-  __band_n__   : band of the tiff mosaics from which values come from
+(e.g., 1 = 2003 seas. 1; 2 = 2003 seas 2....)       
+-  __year__     : year of the analysis (note that "date" can correspond to a 
+different year on seasons spanning end of the yea (e.g., year = 2003, sos date = 2002-10-25)       
+-  __date__     : date of occurrence of the PhenoRice metric
+-  __doy__      : doy of occurrence of the PhenoRice metric (for the "decirc" variables
+this is the number of days since 2000-01-01; for "standard" varibales, it is 
+number of days since the beginning of the year (negative values possible as well 
+as values above 365!))
+-  __N__        : unique identifier of a pixel within the subregion
+-  __n_pix_val__: number of pixels identified as being rice within the subregion
+
+
+so, for example, subsetting on a specific "ID_NAME" gives us
+all PhenoRice results for a given subregion: 
+
+```{r}
+require(dplyr)
+pix_data <- indata$alldata %>% 
+  dplyr::filter(ID_name == "PHL_Region 3 - Central Luzon_Zambales")
+head(pix_data)
+```
+
+from which we will be able to extract all kind of information without bothering 
+anymore with the homungus raster mosaics! For example: 
+
+```{r}
+library(ggplot2)
+ggplot(pix_data) + geom_violin(aes(x = factor(year), y = doy), alpha = 0.4) + 
+  theme_bw() + 
+  ggtitle("Sos Dates distribution - Central Luzon_Zambales") + 
+  coord_flip()
+
+```
+
+2) **`indata$stats`** contains "summarized" data over each subregion and PhenoRIce
+season: 
+
+```{r message=FALSE, warning=FALSE}
+
+head(indata$stats)
+
+```
+
+-  __ID_name__  : Name of RiceAtlas polygon 
+-  __variable__ : PhenoRice variable      
+-  __band_n__   : band of the tiff mosaics from which values come from
+(e.g., 1 = 2003 seas. 1; 2 = 2003 seas 2....)       
+-  __year__     : year of the analysis (note that "date" can correspond to a 
+different year on seasons spanning end of the yea (e.g., year = 2003, sos date = 2002-10-25)       
+-  __avgdate__  : Average date of occurrence of the PhenoRice metric __over the 
+"band" and sub region__
+-  __avgdoy__   : Average doy of occurrence of the PhenoRice metric __over the 
+"band" and sub region__ (the same conventions for decirc and original variables
+described above apply)
+-  __meddoy__   : Median doy of occurrence of the PhenoRice metric __over the 
+"band" and sub region__
+-  __sd__       : Standard deviation of doy of occurrence of the PhenoRice metric 
+__over the "band" and sub region__
+-  __mindoy__   : Minimum doy of occurrence of the PhenoRice metric __over the 
+"band" and sub region__
+-  __maximum__   : Maximum doy of occurrence of the PhenoRice metric __over the 
+"band" and sub region__  
+-  __n_pix_val__ : number of pixels identified as being rice within the subregion
+-  __n_pix__     : total number of pixels within the subregion
+
+
+(Note that for the current analysis this is not very useful, since the summaruized
+data are computed on a "per phenorice season" basis. It is better to use the "alldata"
+element of the output and perform any needed data extraction / summarization starting
+from that.)
+
+# Next steps
+
+### __Preliminary analysis of consistency between PhenoRice and RiceAtlas__
+
+by comparing
+Phenorice histograms with riceatlas data. Histograms can be quickly produced like
+this:
+
+```{r message=FALSE, warning=FALSE}
+library(sprawl)
+# Create a dummy variable, aggregating all data as if they were from the same year
+indata$alldata$fakedate <- sprawl::doytodate(indata$alldata$doy, 2003)
+
+library(ggplot2)
+ggplot(indata$alldata) +
+  geom_histogram(aes(x = fakedate), binwidth = 8) +
+  facet_wrap(~ID_name, scales = "free_y") + theme_bw()
+```
+
+Info about the riceatlas season area and the sos ranges __should be overplotted
+for reference to allow a quick comparison__. 
+
+### __mixtools analysis to "identify" the main seasons__ 
+
+Needs to be done for each RiceAtlas polygon. We should decide if:  
+
+a) Subsetting the data on a selected year, and analyse only that one. 
+b) Analysing each year separately 
+c) Aggregating all data as if they were from the same year (this allows to 
+increase the dimensions of the sample in low rice fc areas). This requires
+creating a "dummy variable" using something like: 
+
+```{r message=FALSE, warning=FALSE}
+
+indata$alldata$fakedate <- doytodate(datetodoy(indata$alldata$date), 2003)
+head(indata$alldata)
+```
+
+### __Compute the PhenoRice Areas__
+
+Once the main seasons are identified, __compute the area__ detected by PhenoRice
+within each season (by subsetting on date/fakedate)
+
+### __Summarize the Comparison__
+
+Find a "statistical" way to __compare both the detected rice seasons and areas 
+  and summarize results__ of the comparison.
+
+
+
