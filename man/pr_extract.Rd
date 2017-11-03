@@ -37,7 +37,7 @@ Region_name <- "Region_3_-_Central_Luzon"
 # "1) run "pr_extract" on the region ----
 
 pr_extract(main_folder,
-          region = Region_name)
+          region = "Region_name")
 }
 
 }

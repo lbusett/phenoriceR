@@ -22,7 +22,7 @@
 #' # "1) run "pr_extract" on the region ----
 #'
 #' pr_extract(main_folder,
-#'           region = Region_name)
+#'           region = "Region_name")
 #' }
 #'
 #' @rdname pr_extract
@@ -32,16 +32,18 @@
 #' @importFrom lubridate year
 #' @importFrom sprawl reproj_vect get_proj4string make_folder extract_rast
 #' @importFrom tools file_path_sans_ext
+#' @importFrom sf filter.sf
 pr_extract = function(main_folder, region) {
   # Load the reshuffled shapefile ----
 
-  in_shp <- read_vect(file.path(main_folder,
-                                "vector/Ricetlas/riceatlas_asia_reshuffled.shp"))
+  in_shp <- sprawl::read_vect(file.path(main_folder,
+                                        "vector/Ricetlas/riceatlas_asia_reshuffled.shp"))
 
   if (region == "All") {
-    regions <- unique(in_shp$Region)
+
+    regions <- na.omit(unique(in_shp$Region))
   } else {
-    regions = region
+    regions = na.omit(region)
     if (!all(regions %in% unique(in_shp$Region))) {
       stop("pr_extract --> At least one of the specified regions does not
            exist in the RiceAtlas data base. Aborting!")
@@ -57,6 +59,7 @@ pr_extract = function(main_folder, region) {
     # of the vector
     in_vect <- unique(in_vect[c(1:4, 19)])
     # reproject to the CRS of the rasters
+
     in_vect <- sprawl::reproj_vect(in_vect, sprawl::get_proj4string(
       file.path(main_folder,"orig_mosaic/param_series/decirc/eos_decirc.tif")),
       verbose = FALSE)
